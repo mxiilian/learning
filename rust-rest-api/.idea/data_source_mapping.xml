@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="DataSourcePerFileMappings">
+    <file url="file://$PROJECT_DIR$/migrations/20260102024226_create_vocab_table.sql" value="26754fa6-6816-4965-b12a-65c518fe45e5" />
+    <file url="file://$APPLICATION_CONFIG_DIR$/consoles/db/26754fa6-6816-4965-b12a-65c518fe45e5/console.sql" value="26754fa6-6816-4965-b12a-65c518fe45e5" />
+    <file url="file://$APPLICATION_CONFIG_DIR$/consoles/db/26754fa6-6816-4965-b12a-65c518fe45e5/console_1.sql" value="26754fa6-6816-4965-b12a-65c518fe45e5" />
+  </component>
+</project>

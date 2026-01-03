@@ -1,0 +1,2 @@
+for<'a> fn(Extension<Pool<Postgres>>, &'a std::path::Path) -> impl Future<Output = Result<axum::Json<VocabStruct>, StatusCode>> {get_vocab}
+for<'a> fn(Extension<Pool<Postgres>>, &'a std::path::Path) -> impl Future<Output = Result<axum::Json<VocabStruct>, StatusCode>> {get_vocab}: Handler<_, _>
