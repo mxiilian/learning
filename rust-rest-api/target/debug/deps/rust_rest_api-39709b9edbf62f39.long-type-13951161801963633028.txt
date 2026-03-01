@@ -1,0 +1,2 @@
+fn(Extension<Pool<Postgres>>, axum::extract::Path<i32>, axum::Json<UpdateVocabStruct>) -> impl Future<Output = ()> {update_vocab}
+fn(Extension<Pool<Postgres>>, axum::extract::Path<i32>, axum::Json<UpdateVocabStruct>) -> impl Future<Output = ()> {update_vocab}: Handler<_, _>

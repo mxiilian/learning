@@ -1,0 +1,2 @@
+fn(Extension<Pool<Postgres>>) -> impl Future<Output = Result<axum::Json<Vec<VocabStruct>>, StatusCode>> {get_vocabs}
+fn(Extension<Pool<Postgres>>) -> impl Future<Output = Result<axum::Json<Vec<VocabStruct>>, StatusCode>> {get_vocabs}: Handler<_, _>

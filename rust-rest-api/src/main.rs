@@ -1,13 +1,14 @@
-mod vocab_struct;
+mod vocab_structs;
 
 use axum::{routing::{get, post}, Extension, Json, Router};
 use tracing::{info,Level};
 use axum::extract::Path;
 use axum::http::StatusCode;
 use dotenvy::dotenv;
+use serde_json::json;
 use sqlx::{Pool, Postgres};
 use sqlx::postgres::PgPoolOptions;
-use crate::vocab_struct::{UpdateVocabStruct, VocabStruct};
+use crate::vocab_structs::{CreateVocabStruct, UpdateVocabStruct, VocabStruct};
 
 #[tokio::main]
 async fn main() -> Result<(), sqlx::Error> {
@@ -23,7 +24,7 @@ async fn main() -> Result<(), sqlx::Error> {
     //Erzeugt Router und definiert root Pfad
     let app = Router::new()
         .route("/vocab", get(get_vocabs).post(create_vocab))
-        .route("/vocab/:id", get(get_vocab).put(update_vocab))
+        .route("/vocab/{id}", get(get_vocab).put(update_vocab).delete(delete_vocab))
         .layer(Extension(pool));
 
     //Bindet den Server an Port 5000 und startet ihn
@@ -44,7 +45,7 @@ async fn get_vocabs(
 ) -> Result<Json<Vec<VocabStruct>>, StatusCode> {
     let vocab_list = sqlx::query_as!(
         VocabStruct,
-        "SELECT id, word, definition, example_sentence, picture_url FROM vocab"
+        "SELECT id, word, definition, example_sentence, picture_url ,last_correct FROM vocab"
     )
     .fetch_all(&pool)
     .await
@@ -58,7 +59,7 @@ async fn get_vocab(
 ) -> Result<Json<VocabStruct>, StatusCode> {
     let vocab = sqlx::query_as!(
         VocabStruct,
-        "SELECT id, word, definition, example_sentence, picture_url FROM vocab WHERE id = $1",
+        "SELECT id, word, definition, example_sentence, picture_url, last_correct FROM vocab WHERE id = $1",
         id
     )
     .fetch_one(&pool)
@@ -69,15 +70,16 @@ async fn get_vocab(
 
 async fn create_vocab(
     Extension(pool): Extension<Pool<Postgres>>,
-    Json(new_vocab): Json<VocabStruct>,
+    Json(new_vocab): Json<CreateVocabStruct>,
 ) -> Result<Json<VocabStruct>, StatusCode>{
     let vocab = sqlx::query_as!(
         VocabStruct,
-        "INSERT INTO vocab (word, definition, example_sentence, picture_url) VALUES ($1, $2, $3, $4) RETURNING id, word, definition, example_sentence, picture_url",
+        "INSERT INTO vocab (word, definition, example_sentence, picture_url, last_correct) VALUES ($1, $2, $3, $4, $5) RETURNING id, word, definition, example_sentence, picture_url, last_correct",
         new_vocab.word,
         new_vocab.definition,
         new_vocab.example_sentence,
-        new_vocab.picture_url
+        new_vocab.picture_url,
+        new_vocab.last_correct,
     )
     .fetch_one(&pool)
     .await
@@ -93,13 +95,14 @@ async fn update_vocab(
 ) {
     let vocab = sqlx::query_as!(
         VocabStruct,
-        "UPDATE vocab SET word = COALESCE($1, word), definition = COALESCE($2, definition), example_sentence = COALESCE($3, example_sentence), picture_url = COALESCE($4, picture_url) WHERE id = $5 RETURNING id, word, definition, example_sentence, picture_url",
+        "UPDATE vocab SET word = COALESCE($1, word), definition = COALESCE($2, definition), example_sentence = COALESCE($3, example_sentence), picture_url = COALESCE($4, picture_url), last_correct = COALESCE($5, last_correct) WHERE id = $6 RETURNING id, word, definition, example_sentence, picture_url, last_correct",
         //COALESCE sorgt dafür, dass wenn der Wert NULL ist, der alte Wert beibehalten wird
         updated_vocab.word,
         updated_vocab.definition,
         updated_vocab.example_sentence,
         updated_vocab.picture_url,
-        id
+        updated_vocab.last_correct,
+        id,
     )
     .fetch_one(&pool)
     .await;
@@ -109,3 +112,24 @@ async fn update_vocab(
         Err(_) => Err(StatusCode::NOT_FOUND),
     };
 }
+
+async fn delete_vocab(
+    Extension(pool): Extension<Pool<Postgres>>,
+    Path(id): Path<i32>,
+) -> Result<Json<serde_json::Value>,StatusCode> {
+    let result = sqlx::query!(
+        "DELETE FROM vocab WHERE id = $1",
+        id
+    )
+    .execute(&pool)
+    .await;
+
+    match result {
+        Ok(_) => Ok(Json(json!({
+            "status": "success",
+            "message": format!("Vocabulary with id {} deleted successfully", id)
+        }))),
+        Err(_) => Err(StatusCode::NOT_FOUND),
+    }
+}
+
