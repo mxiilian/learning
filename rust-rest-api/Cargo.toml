@@ -13,3 +13,5 @@ tracing = "0.1.44"
 tracing-subscriber = "0.3.22"
 chrono = { version = "0.4", features = ["serde"] }
 serde_json = "1.0.148"
+bcrypt = "0.16"
+tower-http = { version = "0.6", features = ["cors"] }

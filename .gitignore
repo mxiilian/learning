@@ -42,3 +42,26 @@ app-example
 /ios
 /android
 *.env
+# Rust build artifacts
+rust-rest-api/target/
+rust-rest-api/target/.rustc_info.json
+# IDE / Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+Thumbs.db
+
+# Rust
+rust-rest-api/target/
+rust-rest-api/.cargo/
+Cargo.lock
+
+# Testing / Logs
+*.log
+
+rust-rest-api/target/.rustc_info.json
+rust-rest-api/target/debug/rust-rest-api.d

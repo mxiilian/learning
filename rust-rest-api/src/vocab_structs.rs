@@ -2,6 +2,7 @@ use serde::{Deserialize, Serialize};
 use sqlx::types::chrono::NaiveDateTime;
 
 #[derive(Serialize, Deserialize)] //Damit wir es von und zu JSON umwandeln können
+#[serde(rename_all = "camelCase")]
 pub struct CreateVocabStruct {
     pub word: String,
     pub definition: String,
@@ -10,6 +11,7 @@ pub struct CreateVocabStruct {
     pub last_correct: Option<NaiveDateTime>,
 }
 #[derive(Serialize, Deserialize)] //Damit wir es von und zu JSON umwandeln können
+#[serde(rename_all = "camelCase")]
 pub struct VocabStruct {
     pub id: i32,
     pub word: String,
@@ -20,6 +22,7 @@ pub struct VocabStruct {
 }
 
 #[derive(Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct UpdateVocabStruct {
     pub word: Option<String>,
     pub definition: Option<String>,
