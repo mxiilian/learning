@@ -14,6 +14,7 @@ export type User = {
     password: string;
     createdAt: string;
     updatedAt: string;
+    token?: string;
 }
 
 export type PublicUser = {
