@@ -1,96 +1,91 @@
-import { LoginUser } from '@/services/model/userModel';
+import { useState } from 'react';
 import { Link } from 'expo-router';
-import { loginUser } from '@/services/userService';
 import { useRouter } from 'expo-router';
-import { useState } from "react";
-import { saveToken } from '@/services/authService';
-import { View, Text, TextInput, Pressable, StyleSheet } from 'react-native';
+import { View, Text, TextInput, Pressable, Alert } from 'react-native';
+import { useFonts } from 'expo-font';
+import { Caveat_700Bold } from '@expo-google-fonts/caveat';
+import { Kalam_400Regular, Kalam_700Bold } from '@expo-google-fonts/kalam';
+
 import LoginRoute from '@/components/LoginRoute';
+import { loginUser } from '@/services/userService';
+import { saveUserSession } from '@/services/authService';
+import { LoginUser } from '@/services/model/userModel';
+import { authStyles as s } from '@/styles/auth.styles';
 
+export default function LoginScreen() {
+    const router = useRouter();
 
+    useFonts({ Caveat_700Bold, Kalam_400Regular, Kalam_700Bold });
 
-export default function HomeScreen() {
-  const router = useRouter();
+    const [username, setUsername] = useState('');
+    const [password, setPassword] = useState('');
+    const [loading, setLoading]   = useState(false);
 
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
+    async function handleLogin() {
+        const u = username.trim();
+        const p = password.trim();
+        if (!u || !p) {
+            Alert.alert('Fehler', 'Benutzername und Passwort sind erforderlich.');
+            return;
+        }
 
-  function handleLogin(username: string, password: string) {
-    if (!username || !password || username.trim() === '' || password.trim() === '') {
-      console.error('Username and password are required');
-      return;
+        setLoading(true);
+        const userData: LoginUser = { username: u, password: p };
+
+        try {
+            const response = await loginUser(userData);
+            if (response.status !== 'success' || !response.token) {
+                Alert.alert('Fehler', 'Benutzername oder Passwort falsch.');
+                return;
+            }
+            await saveUserSession(
+                response.token,
+                response.user.id,
+                response.user.username,
+                response.user.isAdmin,
+            );
+            router.replace('/dashboard');
+        } catch {
+            Alert.alert('Fehler', 'Verbindung zum Server fehlgeschlagen.');
+        } finally {
+            setLoading(false);
+        }
     }
 
-    let userData: LoginUser = {
-          username,
-          password,
-      }
+    return (
+        <LoginRoute>
+            <View style={s.container}>
+                <Text style={s.brand}>안녕 한국</Text>
+                <Text style={s.title}>Anmelden</Text>
 
-    loginUser(userData)
-      .then(async (response) => {
-        const token = response.token;
-        if (!token) {
-          throw new Error('No token received from server');
-        }
-        const tokenString = typeof token === 'string' ? token : JSON.stringify(token);
-        await saveToken(tokenString);
-        console.log('Login successful:', response);
-        router.push('/dashboard');
-      })
-      .catch(error => {
-        console.error('Login failed:', error);
-        // Handle login failure, e.g., show an error message
-      });
-  
-  }
-  
-  return (
-    <LoginRoute>
-      <View style={styles.container}>
-        <Text style={styles.header}>안녕 한국</Text>
-        <Text style={styles.title}>Login</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="Username"
-          value={username}
-          onChangeText={setUsername}
-        />
-        <TextInput
-          style={styles.input}
-          placeholder="Password"
-          value={password}
-          onChangeText={setPassword}
-          secureTextEntry
-        />
-        <Pressable style={styles.button} onPress={() => handleLogin(username, password)}>
-          <Text style={styles.buttonText}>Login</Text>
-        </Pressable>
-        <Link href="/register" style={styles.registration}>
-          Register
-        </Link>
-      </View>
-    </LoginRoute>
-);
+                <TextInput
+                    style={s.input}
+                    placeholder="Benutzername"
+                    value={username}
+                    onChangeText={setUsername}
+                    autoCapitalize="none"
+                    autoCorrect={false}
+                />
+                <TextInput
+                    style={s.input}
+                    placeholder="Passwort"
+                    value={password}
+                    onChangeText={setPassword}
+                    secureTextEntry
+                />
 
+                <Pressable
+                    style={[s.button, loading && s.buttonDisabled]}
+                    onPress={handleLogin}
+                    disabled={loading}
+                >
+                    <Text style={s.buttonText}>{loading ? 'Lade…' : 'Anmelden'}</Text>
+                </Pressable>
+
+                <Link href="/register" style={s.link}>
+                    Noch kein Konto? Registrieren
+                </Link>
+            </View>
+        </LoginRoute>
+    );
 }
-
-const styles = StyleSheet.create({
-    container: { flex: 1, padding: 24, justifyContent: 'center' },
-    title: { fontSize: 24, fontWeight: '600', marginBottom: 24 },
-    input: {
-        borderWidth: 1,
-        borderColor: '#ccc',
-        borderRadius: 8,
-        padding: 12,
-        marginBottom: 16,
-    },
-    button: {
-        backgroundColor: '#4F46E5',
-        padding: 14,
-        borderRadius: 8,
-        alignItems: 'center',
-    },
-    buttonText: { color: '#fff', fontWeight: '600' },
-    registration: { marginTop: 16, textAlign: 'center' },
-    header: { fontSize: 32, fontWeight: '700', marginBottom: 32 },
-});

@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 use sqlx::types::chrono::NaiveDateTime;
 
-#[derive(Serialize, Deserialize)] 
+#[derive(Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct CreateUserStruct {
     pub username: String,
@@ -13,9 +13,10 @@ pub struct CreateUserStruct {
 pub struct UserStruct {
     pub id: i32,
     pub username: String,
-    #[serde(skip_serializing)]  
+    #[serde(skip_serializing)]
     pub password_hash: String,
     pub created_at: Option<NaiveDateTime>,
+    pub is_admin: bool,
 }
 
 #[derive(Serialize, Deserialize)]
@@ -31,13 +32,17 @@ pub struct PublicUserStruct {
     pub id: i32,
     pub username: String,
     pub created_at: Option<NaiveDateTime>,
-} 
+    pub is_admin: bool,
+}
 
+/// JWT Claims
 #[derive(Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Claims {
     pub sub: i32,
     pub exp: usize,
+    /// Wird im Token gespeichert, damit Endpunkte Admin-Rechte prüfen können
+    pub is_admin: bool,
 }
 
 #[derive(Serialize, Deserialize)]
@@ -52,10 +57,10 @@ pub struct VocabProgress {
     pub correct_streak: i32,
 }
 
-// Payload wenn Nutzer eine Antwort gibt
+/// Payload wenn Nutzer eine Antwort gibt
 #[derive(Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ReviewResult {
     pub vocab_id: i32,
-    pub correct: bool,  // hat der Nutzer die Vokabel gewusst?
+    pub correct: bool,
 }

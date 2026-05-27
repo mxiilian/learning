@@ -48,3 +48,22 @@ Join our community of developers creating universal apps.
 
 - [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
 - [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+
+
+# Docker Container aufsetzen
+```
+docker run -d \
+  --name postgres-korean \
+  -e POSTGRES_PASSWORD=password \
+  -p 5432:5432 \
+  postgres:17
+```
+# Migration laufen lassen
+```
+sqlx mig run
+```
+# Rust Backend starten
+```
+cargo run
+```
+

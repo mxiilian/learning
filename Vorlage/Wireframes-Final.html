@@ -1,0 +1,201 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=1400"/>
+<title>안녕 한국 · Wireframes (Final)</title>
+<link rel="stylesheet" href="styles.css"/>
+</head>
+<body>
+
+<div class="toolbar">
+  <div class="toolbar-inner">
+    <div class="brand">
+      <span class="ko">안녕 한국</span>
+      <span>Wireframes · Final</span>
+      <span class="tag">ausgewählte Varianten</span>
+    </div>
+  </div>
+</div>
+
+<section class="screen active" data-screen="final">
+  <div class="screen-head">
+    <h1>Deine Auswahl</h1>
+    <div class="sub">5 Screens · finale Varianten mit Anpassungen</div>
+    <div class="note">Home (Stats-first, Boxen vertikal) · Vokabeln (Donut+Heatmap mit 5-Box-System, ohne Stapel-Liste) · Abfrage (Karten-Stapel, Vorder- + Rückseite) · Neu (Langes Formular mit Beispielsatz, ohne Stapel, Speichern → Haken) · Katalog (Liste mit Fortschritt + Drill-in)</div>
+  </div>
+
+  <div class="canvas-grid">
+    <div class="variant">
+      <div class="variant-label">
+        <span class="num">01</span>
+        <span class="name">Home</span>
+        <span class="desc">Stats-first · Boxen vertikal</span>
+      </div>
+      <div id="m-home"></div>
+    </div>
+
+    <div class="variant">
+      <div class="variant-label">
+        <span class="num">02</span>
+        <span class="name">Vokabeln</span>
+        <span class="desc">Donut · 5-Box-System · Heatmap</span>
+      </div>
+      <div id="m-ueb"></div>
+    </div>
+
+    <div class="variant">
+      <div class="variant-label">
+        <span class="num">02.b</span>
+        <span class="name">Box-Inhalt</span>
+        <span class="desc">Drill-in in eine Box · Vokabeln entfernen</span>
+      </div>
+      <div id="m-box"></div>
+    </div>
+
+    <div class="variant">
+      <div class="variant-label">
+        <span class="num">03.a</span>
+        <span class="name">Abfrage — Vorderseite</span>
+        <span class="desc">Karten-Stapel, Bild + Hinweis + Audio</span>
+      </div>
+      <div id="m-abf-front"></div>
+    </div>
+
+    <div class="variant">
+      <div class="variant-label">
+        <span class="num">03.b</span>
+        <span class="name">Abfrage — Rückseite</span>
+        <span class="desc">Koreanisch · Übersetzung · Beispielsatz</span>
+      </div>
+      <div id="m-abf-back"></div>
+    </div>
+
+    <div class="variant">
+      <div class="variant-label">
+        <span class="num">04</span>
+        <span class="name">Neu anlegen</span>
+        <span class="desc">Langform + Beispielsatz, ✓ oben rechts</span>
+      </div>
+      <div id="m-neu"></div>
+    </div>
+
+    <div class="variant">
+      <div class="variant-label">
+        <span class="num">05.a</span>
+        <span class="name">Katalog — Themen-Liste</span>
+        <span class="desc">mit Fortschrittsbalken</span>
+      </div>
+      <div id="m-kat-list"></div>
+    </div>
+
+    <div class="variant">
+      <div class="variant-label">
+        <span class="num">05.b</span>
+        <span class="name">Katalog — Drill-in</span>
+        <span class="desc">Multi-Select aus einem Thema</span>
+      </div>
+      <div id="m-kat-drill"></div>
+    </div>
+  </div>
+</section>
+
+<!-- Tweaks panel -->
+<div class="tweaks" id="tweaks-panel">
+  <h4>Tweaks</h4>
+  <div class="tweaks-row">
+    <label>Sketch-Intensität</label>
+    <div class="opts" data-key="sketchiness">
+      <button data-v="clean">clean</button>
+      <button data-v="normal" class="active">normal</button>
+      <button data-v="rough">rough</button>
+    </div>
+  </div>
+  <div class="tweaks-row">
+    <label>Akzent-Farbe</label>
+    <div class="opts" data-key="accent">
+      <button data-v="amber" style="background:oklch(72% 0.12 55)">amber</button>
+      <button data-v="rose"  style="background:oklch(72% 0.12 20)">rose</button>
+      <button data-v="mint"  class="active" style="background:oklch(75% 0.08 160)">mint</button>
+      <button data-v="sky"   style="background:oklch(75% 0.08 240)">sky</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+<script type="text/babel" src="primitives.jsx"></script>
+<script type="text/babel" src="screens-final.jsx"></script>
+
+<script type="text/babel">
+const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
+  "sketchiness": "normal",
+  "accent": "amber"
+}/*EDITMODE-END*/;
+
+const mounts = [
+  ['m-home', 'HomeFinal'],
+  ['m-ueb', 'UebersichtFinal'],
+  ['m-box', 'BoxContentFinal'],
+  ['m-abf-front', 'AbfrageFrontFinal'],
+  ['m-abf-back', 'AbfrageBackFinal'],
+  ['m-neu', 'NeuFinal'],
+  ['m-kat-list', 'KatalogListFinal'],
+  ['m-kat-drill', 'KatalogDrillFinal'],
+];
+mounts.forEach(([id, comp]) => {
+  const el = document.getElementById(id);
+  if (!el || !window[comp]) return;
+  ReactDOM.createRoot(el).render(React.createElement(window[comp]));
+});
+
+const state = {...TWEAK_DEFAULTS, ...(JSON.parse(localStorage.getItem('hk_wf_final_state')||'{}'))};
+function persist() { localStorage.setItem('hk_wf_final_state', JSON.stringify(state)); }
+
+function applyAccent(name) {
+  const map = {
+    amber:['72% 0.12 55','92% 0.04 55'],
+    rose: ['72% 0.12 20','92% 0.04 20'],
+    mint: ['75% 0.08 160','93% 0.03 160'],
+    sky:  ['75% 0.08 240','93% 0.03 240'],
+  };
+  const [a, s] = map[name] || map.mint;
+  document.documentElement.style.setProperty('--accent', `oklch(${a})`);
+  document.documentElement.style.setProperty('--accent-soft', `oklch(${s})`);
+}
+function applySketchiness(v) {
+  document.body.classList.toggle('rough', v === 'rough');
+  document.body.classList.toggle('clean', v === 'clean');
+}
+function setTweak(key, v) {
+  state[key] = v;
+  if (key === 'accent') applyAccent(v);
+  if (key === 'sketchiness') applySketchiness(v);
+  document.querySelectorAll(`.tweaks-row .opts[data-key="${key}"] button`).forEach(b=>{
+    b.classList.toggle('active', b.dataset.v === v);
+  });
+  persist();
+  window.parent.postMessage({type:'__edit_mode_set_keys', edits:{[key]:v}}, '*');
+}
+document.querySelectorAll('.tweaks-row .opts').forEach(row => {
+  const key = row.dataset.key;
+  row.querySelectorAll('button').forEach(btn => {
+    btn.onclick = () => setTweak(key, btn.dataset.v);
+  });
+});
+applyAccent(state.accent);
+applySketchiness(state.sketchiness);
+document.querySelectorAll(`.tweaks-row .opts[data-key="sketchiness"] button`).forEach(b=>b.classList.toggle('active', b.dataset.v === state.sketchiness));
+document.querySelectorAll(`.tweaks-row .opts[data-key="accent"] button`).forEach(b=>b.classList.toggle('active', b.dataset.v === state.accent));
+
+window.addEventListener('message', (e) => {
+  if (!e.data || typeof e.data !== 'object') return;
+  if (e.data.type === '__activate_edit_mode') document.getElementById('tweaks-panel').classList.add('on');
+  if (e.data.type === '__deactivate_edit_mode') document.getElementById('tweaks-panel').classList.remove('on');
+});
+window.parent.postMessage({type:'__edit_mode_available'}, '*');
+</script>
+</body>
+</html>

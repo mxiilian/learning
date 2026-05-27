@@ -1,5 +1,5 @@
-import { apiFetch } from "./api";
-import { CreateUser, LoginUser, User, PublicUser } from "./model/userModel";
+import { apiFetch } from './api';
+import { CreateUser, LoginUser, User, LoginResponse } from './model/userModel';
 
 export async function createUser(userData: CreateUser): Promise<User> {
     return apiFetch<User>('/users', {
@@ -8,10 +8,9 @@ export async function createUser(userData: CreateUser): Promise<User> {
     });
 }
 
-
-export async function loginUser(loginUser: LoginUser): Promise<User> {
-    return apiFetch<User>('/users/login', {
+export async function loginUser(loginData: LoginUser): Promise<LoginResponse> {
+    return apiFetch<LoginResponse>('/users/login', {
         method: 'POST',
-        body: JSON.stringify(loginUser),
+        body: JSON.stringify(loginData),
     });
 }

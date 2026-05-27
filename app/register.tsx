@@ -1,83 +1,85 @@
-import { useState } from "react";
-import { View, Text, TextInput, Pressable, StyleSheet } from 'react-native';
-import { CreateUser } from "@/services/model/userModel";
-import { createUser } from "@/services/userService";
+import { useState } from 'react';
+import { useRouter } from 'expo-router';
+import { View, Text, TextInput, Pressable, Alert } from 'react-native';
+import { useFonts } from 'expo-font';
+import { Caveat_700Bold } from '@expo-google-fonts/caveat';
+import { Kalam_400Regular, Kalam_700Bold } from '@expo-google-fonts/kalam';
+
+import { createUser } from '@/services/userService';
+import { CreateUser } from '@/services/model/userModel';
+import { authStyles as s } from '@/styles/auth.styles';
+
 export default function RegisterScreen() {
+    const router = useRouter();
 
-    const [username, setUsername] = useState('');
-    const [password, setPassword] = useState('');
+    useFonts({ Caveat_700Bold, Kalam_400Regular, Kalam_700Bold });
+
+    const [username, setUsername]               = useState('');
+    const [password, setPassword]               = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
+    const [loading, setLoading]                 = useState(false);
 
-    function handleRegister(username: string, password: string, confirmPassword: string) {
-        if (!username || !password || !confirmPassword) {
-            console.error('All fields are required');
+    async function handleRegister() {
+        const u = username.trim();
+        if (!u || !password || !confirmPassword) {
+            Alert.alert('Fehler', 'Alle Felder sind erforderlich.');
             return;
         }
-
         if (password !== confirmPassword) {
-            console.error('Passwords do not match');
+            Alert.alert('Fehler', 'Passwörter stimmen nicht überein.');
             return;
         }
 
-        const userData: CreateUser = {
-            username,
-            password
-        };
+        setLoading(true);
+        const userData: CreateUser = { username: u, password };
 
-        createUser(userData)
-            .then(() => {
-                console.log('User registered successfully');
-            })
-            .catch((error) => {
-                console.error('Error registering user:', error);
-            });
-
+        try {
+            await createUser(userData);
+            Alert.alert('Erfolg', 'Konto erstellt! Du kannst dich jetzt anmelden.', [
+                { text: 'OK', onPress: () => router.replace('/') },
+            ]);
+        } catch {
+            Alert.alert('Fehler', 'Registrierung fehlgeschlagen. Benutzername vergeben?');
+        } finally {
+            setLoading(false);
+        }
     }
 
-
-
     return (
-        <View style={styles.container}>
-            <Text style={styles.title}>Register</Text>
-            <TextInput 
-                style={styles.input}
-                placeholder="Username" 
-                value={username} 
-                onChangeText={setUsername} />
-            <TextInput 
-                style={styles.input}
-                placeholder="Password" 
-                value={password} 
-                onChangeText={setPassword} 
-                secureTextEntry={true} />
-            <TextInput 
-                style={styles.input}
-                placeholder="Confirm Password" 
-                value={confirmPassword} 
-                onChangeText={setConfirmPassword} 
-                secureTextEntry={true} />
-            <Pressable style={styles.button} onPress={() => handleRegister(username, password, confirmPassword)}>
-                <Text style={styles.buttonText}>Register</Text>
+        <View style={s.container}>
+            <Text style={s.brand}>안녕 한국</Text>
+            <Text style={s.title}>Registrieren</Text>
+
+            <TextInput
+                style={s.input}
+                placeholder="Benutzername"
+                value={username}
+                onChangeText={setUsername}
+                autoCapitalize="none"
+                autoCorrect={false}
+            />
+            <TextInput
+                style={s.input}
+                placeholder="Passwort"
+                value={password}
+                onChangeText={setPassword}
+                secureTextEntry
+            />
+            <TextInput
+                style={s.input}
+                placeholder="Passwort bestätigen"
+                value={confirmPassword}
+                onChangeText={setConfirmPassword}
+                secureTextEntry
+            />
+
+            <Pressable
+                style={[s.button, loading && s.buttonDisabled]}
+                onPress={handleRegister}
+                disabled={loading}
+            >
+                <Text style={s.buttonText}>{loading ? 'Lade…' : 'Konto erstellen'}</Text>
             </Pressable>
         </View>
     );
 }
-
-const styles = StyleSheet.create({
-    container: { flex: 1, padding: 24, justifyContent: 'center' },
-    title: { fontSize: 24, fontWeight: '600', marginBottom: 24 },
-    input: {
-        borderWidth: 1,
-        borderColor: '#ccc',
-        borderRadius: 8,
-        padding: 12,
-        marginBottom: 16,
-    },
-    button: {
-        backgroundColor: '#4F46E5',
-        padding: 14,
-        borderRadius: 8,
-        alignItems: 'center',
-    },
-    buttonText: { color: '#fff', fontWeight: '600' },
-});
