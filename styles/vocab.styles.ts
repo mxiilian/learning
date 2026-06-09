@@ -96,6 +96,7 @@ export const vocabStyles = StyleSheet.create({
         fontFamily: Fonts.kalam,
         fontSize:   15,
         color:      Colors.ink,
+
     },
     subText: {
         fontFamily: Fonts.kalamReg,
@@ -144,7 +145,7 @@ export const vocabStyles = StyleSheet.create({
         flexDirection:  'row',
         justifyContent: 'space-between',
         alignItems:     'baseline',
-        marginBottom:   10,
+        marginBottom:   30,
     },
     boxChartBars: {
         flexDirection: 'row',
@@ -211,6 +212,95 @@ export const vocabStyles = StyleSheet.create({
         borderWidth:  1,
         borderColor:  Colors.ink,
         borderRadius: 2,
+    },
+
+    // ── Vokabelliste ──────────────────────────────────────────────
+    vocabListSection: {
+        flexDirection:  'row',
+        justifyContent: 'space-between',
+        alignItems:     'baseline',
+        marginTop:      6,
+        marginBottom:   8,
+    },
+    vocabListTitle: {
+        fontFamily: Fonts.kalam,
+        fontSize:   15,
+        color:      Colors.ink,
+    },
+    vocabListCount: {
+        fontFamily: Fonts.mono,
+        fontSize:   10,
+        color:      Colors.muted,
+    },
+    vocabItem: {
+        flexDirection:   'row',
+        alignItems:      'center',
+        gap:             10,
+        borderWidth:     1.5,
+        borderColor:     Colors.ink,
+        borderRadius:    12,
+        backgroundColor: Colors.paper,
+        padding:         10,
+        marginBottom:    8,
+        ...Shadows.cardFlat,
+    },
+    vocabBoxBadge: {
+        width:           28,
+        height:          28,
+        borderRadius:    6,
+        borderWidth:     1.5,
+        borderColor:     Colors.ink,
+        alignItems:      'center',
+        justifyContent:  'center',
+        flexShrink:      0,
+    },
+    vocabBoxBadgeAccent: {
+        backgroundColor: Colors.accent,
+    },
+    vocabBoxBadgeNeutral: {
+        backgroundColor: Colors.paper2,
+    },
+    vocabBoxBadgeText: {
+        fontFamily: Fonts.kalam,
+        fontSize:   12,
+        color:      Colors.ink,
+    },
+    vocabItemMid: {
+        flex:    1,
+        minWidth: 0,
+    },
+    vocabWord: {
+        fontFamily: Fonts.notoKR,
+        fontSize:   15,
+        color:      Colors.ink,
+        lineHeight: 20,
+    },
+    vocabDef: {
+        fontFamily: Fonts.kalamReg,
+        fontSize:   12,
+        color:      Colors.muted,
+        lineHeight: 17,
+    },
+    vocabStatus: {
+        fontFamily:  Fonts.mono,
+        fontSize:    9,
+        color:       Colors.muted,
+        textAlign:   'right',
+        flexShrink:  0,
+    },
+    vocabStatusDue: {
+        color: Colors.accent,
+    },
+    vocabEmptyState: {
+        alignItems:  'center',
+        paddingVertical: 24,
+        gap: 6,
+    },
+    vocabEmptyText: {
+        fontFamily: Fonts.kalamReg,
+        fontSize:   14,
+        color:      Colors.muted,
+        textAlign:  'center',
     },
 
     // Tab-Bar-Styles leben in components/TabBar.tsx

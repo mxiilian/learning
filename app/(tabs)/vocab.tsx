@@ -11,16 +11,12 @@ import {
 import Svg, { Circle, Text as SvgText } from 'react-native-svg';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useFonts } from 'expo-font';
-import { Caveat_400Regular, Caveat_700Bold } from '@expo-google-fonts/caveat';
-import { Kalam_400Regular, Kalam_700Bold } from '@expo-google-fonts/kalam';
-import { NotoSansKR_400Regular, NotoSansKR_700Bold } from '@expo-google-fonts/noto-sans-kr';
-
 import ProtectedRoute from '@/components/ProtectedRoute';
 import TabBar from '@/components/TabBar';
 import { getUserId } from '@/services/authService';
-import { getVocabStats } from '@/services/vocabService';
 import { VocabStats } from '@/services/model/vocabStatsModel';
+import { VocabWithProgress } from '@/services/model/VocabModels';
+import { useData } from '@/context/DataContext';
 import { vocabStyles as s } from '@/styles/vocab.styles';
 import { Colors, Fonts } from '@/styles/theme';
 
@@ -62,36 +58,34 @@ const HEATMAP_COLORS: Record<0 | 1 | 2 | 3, string> = {
 export default function VocabScreen() {
     const router   = useRouter();
     const insets   = useSafeAreaInsets();
-
-    const [fontsLoaded] = useFonts({
-        Caveat_400Regular,
-        Caveat_700Bold,
-        Kalam_400Regular,
-        Kalam_700Bold,
-        NotoSansKR_400Regular,
-        NotoSansKR_700Bold,
-    });
+    const { getVocabData, invalidate } = useData();
 
     const [userId, setUserId]         = useState<number | null>(null);
     const [stats, setStats]           = useState<VocabStats | null>(null);
+    const [vocabList, setVocabList]   = useState<VocabWithProgress[]>([]);
     const [loading, setLoading]       = useState(true);
     const [refreshing, setRefreshing] = useState(false);
     const [error, setError]           = useState<string | null>(null);
 
-    const loadStats = useCallback(async (uid: number) => {
+    const loadData = useCallback(async (uid: number) => {
         try {
             setError(null);
-            const data = await getVocabStats(uid);
-            setStats(data);
-        } catch {
-            setError('Server nicht erreichbar. Bist du im gleichen WLAN wie der Mac?');
+            const { stats: statsData, list: listData } = await getVocabData(uid);
+            setStats(statsData);
+            setVocabList(listData);
+        } catch (err) {
+            const msg = err instanceof Error ? err.message : '';
+            if (msg.startsWith('UNAUTHORIZED') || msg === 'Nicht eingeloggt') {
+                router.replace('/');
+            } else {
+                setError('Server nicht erreichbar. Bist du im gleichen WLAN wie der Mac?');
+            }
         } finally {
             setLoading(false);
             setRefreshing(false);
         }
-    }, []);
+    }, [router, getVocabData]);
 
-    // Stats bei jedem Screen-Focus abrufen (auch nach router.back())
     useFocusEffect(
         useCallback(() => {
             let cancelled = false;
@@ -100,29 +94,33 @@ export default function VocabScreen() {
                 if (cancelled) return;
                 if (id === null) { router.replace('/'); return; }
                 setUserId(id);
-                if (!cancelled) loadStats(id);
+                if (!cancelled) loadData(id);
             })();
             return () => { cancelled = true; };
         // eslint-disable-next-line react-hooks/exhaustive-deps
-        }, [loadStats])
+        }, [loadData])
     );
 
     useEffect(() => {
-        if (userId !== null && refreshing) loadStats(userId);
-    }, [refreshing, userId, loadStats]);
+        if (userId !== null && refreshing) loadData(userId);
+    }, [refreshing, userId, loadData]);
 
     const onRefresh = useCallback(() => {
-        if (userId !== null) { setRefreshing(true); loadStats(userId); }
-    }, [userId, loadStats]);
+        if (userId !== null) {
+            invalidate();
+            setRefreshing(true);
+            loadData(userId);
+        }
+    }, [userId, loadData, invalidate]);
 
     // ── Lade-Zustand ──────────────────────────────────────────────
-    if (!fontsLoaded || loading) {
+    if (loading) {
         return (
             <ProtectedRoute>
                 <View style={[s.screen, s.centered, { paddingTop: insets.top }]}>
                     <ActivityIndicator size="large" color={Colors.accent} />
                     <Text style={{ color: Colors.muted, marginTop: 10, fontSize: 14 }}>
-                        {!fontsLoaded ? 'Lade Schriften…' : 'Lade Statistiken…'}
+                        Lade Statistiken…
                     </Text>
                 </View>
             </ProtectedRoute>
@@ -173,7 +171,7 @@ export default function VocabScreen() {
                         </View>
                         <Pressable
                             style={s.chipFilled}
-                            onPress={() => router.push('/new-vocab' as any)}
+                            onPress={() => router.push('/new-vocab')}
                         >
                             <Text style={s.chipFilledText}>+ Neu</Text>
                         </Pressable>
@@ -347,10 +345,59 @@ export default function VocabScreen() {
                             <Text style={s.heatmapLegendText}>mehr</Text>
                         </View>
                     </View>
+
+                    {/* Vokabelliste */}
+                    <View style={s.vocabListSection}>
+                        <Text style={s.vocabListTitle}>Meine Vokabeln</Text>
+                        <Text style={s.vocabListCount}>{vocabList.length} EINTRÄGE</Text>
+                    </View>
+
+                    {vocabList.length === 0 ? (
+                        <View style={s.vocabEmptyState}>
+                            <Text style={s.vocabEmptyText}>
+                                Noch keine Vokabeln hinzugefügt.{'\n'}Tippe auf „+ Neu" um zu starten.
+                            </Text>
+                        </View>
+                    ) : (
+                        vocabList.map(item => (
+                            <VocabListItem key={item.id} item={item} />
+                        ))
+                    )}
                 </ScrollView>
 
                 <TabBar />
             </View>
         </ProtectedRoute>
+    );
+}
+
+// ─── Hilfsfunktion: Zeitangabe bis zur nächsten Wiederholung ──────
+function nextReviewLabel(nextReview: string): { text: string; due: boolean } {
+    const diffMs = new Date(nextReview).getTime() - Date.now();
+    if (diffMs <= 0) return { text: 'fällig', due: true };
+    const days = Math.ceil(diffMs / 86_400_000);
+    if (days === 1) return { text: 'morgen', due: false };
+    return { text: `in ${days} T.`, due: false };
+}
+
+// ─── VocabListItem ────────────────────────────────────────────────
+function VocabListItem({ item }: { item: VocabWithProgress }) {
+    const { text, due } = nextReviewLabel(item.nextReview);
+    const isBox1 = item.boxNumber === 1;
+
+    return (
+        <View style={s.vocabItem}>
+            <View style={[
+                s.vocabBoxBadge,
+                isBox1 ? s.vocabBoxBadgeAccent : s.vocabBoxBadgeNeutral,
+            ]}>
+                <Text style={s.vocabBoxBadgeText}>{item.boxNumber}</Text>
+            </View>
+            <View style={s.vocabItemMid}>
+                <Text style={s.vocabWord} numberOfLines={1}>{item.word}</Text>
+                <Text style={s.vocabDef} numberOfLines={1}>{item.definition}</Text>
+            </View>
+            <Text style={[s.vocabStatus, due && s.vocabStatusDue]}>{text}</Text>
+        </View>
     );
 }

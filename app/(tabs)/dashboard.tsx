@@ -9,35 +9,22 @@ import {
 } from 'react-native';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useFonts } from 'expo-font';
-import { Caveat_400Regular, Caveat_700Bold } from '@expo-google-fonts/caveat';
-import { Kalam_400Regular, Kalam_700Bold } from '@expo-google-fonts/kalam';
-import { NotoSansKR_400Regular, NotoSansKR_700Bold } from '@expo-google-fonts/noto-sans-kr';
-
 import ProtectedRoute from '@/components/ProtectedRoute';
 import TabBar from '@/components/TabBar';
 import { deleteUserSession, getUserId, getUsername } from '@/services/authService';
-import { getHomeStats } from '@/services/vocabService';
 import { HomeStats } from '@/services/model/statsModel';
+import { useData } from '@/context/DataContext';
 import { dashboardStyles as s } from '@/styles/dashboard.styles';
 import { Colors } from '@/styles/theme';
 
 // ─── Konstanten ───────────────────────────────────────────────────
-const BOX_INTERVALS = ['täglich', 'alle 2 Tage', 'alle 4 Tage', 'wöchentlich', 'monatlich'];
+const BOX_INTERVALS = ['täglich', 'alle 3 Tage', 'wöchentlich', 'alle 2 Wochen', 'monatlich'];
 
 // ─── Haupt-Screen ─────────────────────────────────────────────────
 export default function Dashboard() {
     const router = useRouter();
     const insets = useSafeAreaInsets();
-
-    const [fontsLoaded] = useFonts({
-        Caveat_400Regular,
-        Caveat_700Bold,
-        Kalam_400Regular,
-        Kalam_700Bold,
-        NotoSansKR_400Regular,
-        NotoSansKR_700Bold,
-    });
+    const { getHomeStats, invalidate } = useData();
 
     const [username, setUsername]     = useState<string>('');
     const [userId, setUserId]         = useState<number | null>(null);
@@ -68,14 +55,21 @@ export default function Dashboard() {
                     setError(null);
                     const data = await getHomeStats(id);
                     if (!cancelled) setStats(data);
-                } catch {
-                    if (!cancelled) setError('Server nicht erreichbar. Bist du im gleichen WLAN wie der Mac?');
+                } catch (err) {
+                    if (cancelled) return;
+                    const msg = err instanceof Error ? err.message : '';
+                    if (msg.startsWith('UNAUTHORIZED') || msg === 'Nicht eingeloggt') {
+                        await deleteUserSession();
+                        router.replace('/');
+                    } else {
+                        setError('Server nicht erreichbar. Bist du im gleichen WLAN wie der Mac?');
+                    }
                 } finally {
                     if (!cancelled) setLoading(false);
                 }
             })();
             return () => { cancelled = true; };
-        // router ist stabil, kein Re-Run nötig
+        // router + cache-getters sind stabil, kein Re-Run nötig
         // eslint-disable-next-line react-hooks/exhaustive-deps
         }, [])
     );
@@ -85,13 +79,19 @@ export default function Dashboard() {
             setError(null);
             const data = await getHomeStats(uid);
             setStats(data);
-        } catch {
-            setError('Server nicht erreichbar. Bist du im gleichen WLAN wie der Mac?');
+        } catch (err) {
+            const msg = err instanceof Error ? err.message : '';
+            if (msg.startsWith('UNAUTHORIZED') || msg === 'Nicht eingeloggt') {
+                await deleteUserSession();
+                router.replace('/');
+            } else {
+                setError('Server nicht erreichbar. Bist du im gleichen WLAN wie der Mac?');
+            }
         } finally {
             setLoading(false);
             setRefreshing(false);
         }
-    }, []);
+    }, [router, getHomeStats]);
 
     // Pull-to-Refresh
     useEffect(() => {
@@ -100,19 +100,20 @@ export default function Dashboard() {
 
     const onRefresh = useCallback(() => {
         if (userId !== null) {
+            invalidate();
             setRefreshing(true);
             loadStats(userId);
         }
-    }, [userId, loadStats]);
+    }, [userId, loadStats, invalidate]);
 
     // ── Lade-Zustand ──────────────────────────────────────────────
-    if (!fontsLoaded || loading) {
+    if (loading) {
         return (
             <ProtectedRoute>
                 <View style={[s.screen, s.centered, { paddingTop: insets.top }]}>
                     <ActivityIndicator size="large" color={Colors.accent} />
                     <Text style={{ color: Colors.muted, marginTop: 10, fontSize: 14 }}>
-                        {!fontsLoaded ? 'Lade Schriften…' : 'Lade Statistiken…'}
+                        Lade Statistiken…
                     </Text>
                 </View>
             </ProtectedRoute>
@@ -180,7 +181,7 @@ export default function Dashboard() {
                         </View>
                         <Pressable
                             style={[s.primaryBtn, dueCount === 0 && s.primaryBtnDisabled]}
-                            onPress={() => dueCount > 0 && router.push('/review' as any)}
+                            onPress={() => dueCount > 0 && router.push('/review')}
                             disabled={dueCount === 0}
                         >
                             <Text style={s.primaryBtnText}>

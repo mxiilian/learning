@@ -1,0 +1,195 @@
+use axum::extract::{Extension, Path};
+use axum::http::{HeaderMap, StatusCode};
+use axum::Json;
+use chrono::{Duration, Local, NaiveDate};
+use sqlx::{Pool, Postgres};
+
+use crate::middleware::auth::extract_and_verify_token;
+use crate::models::vocab::{DayActivity, HomeStats, VocabStats, VocabWithProgress};
+
+pub async fn get_home_stats(
+    Extension(pool): Extension<Pool<Postgres>>,
+    headers: HeaderMap,
+    Path(user_id): Path<i32>,
+) -> Result<Json<HomeStats>, StatusCode> {
+    extract_and_verify_token(&headers, user_id)?;
+
+    let counts = sqlx::query!(
+        r#"
+        SELECT
+            COUNT(*)                                         AS total_vocab,
+            COUNT(*) FILTER (WHERE next_review <= NOW())    AS due_today,
+            COUNT(*) FILTER (WHERE box_number = 1)         AS box1,
+            COUNT(*) FILTER (WHERE box_number = 2)         AS box2,
+            COUNT(*) FILTER (WHERE box_number = 3)         AS box3,
+            COUNT(*) FILTER (WHERE box_number = 4)         AS box4,
+            COUNT(*) FILTER (WHERE box_number = 5)         AS box5
+        FROM user_vocab_progress
+        WHERE user_id = $1
+        "#,
+        user_id
+    )
+    .fetch_one(&pool)
+    .await
+    .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+
+    let review_dates: Vec<NaiveDate> = sqlx::query_scalar!(
+        r#"
+        SELECT DISTINCT DATE(last_reviewed)
+        FROM user_vocab_progress
+        WHERE user_id = $1 AND last_reviewed IS NOT NULL
+        ORDER BY 1 DESC
+        "#,
+        user_id
+    )
+    .fetch_all(&pool)
+    .await
+    .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?
+    .into_iter()
+    .flatten()
+    .collect();
+
+    let streak_days = calculate_streak(&review_dates);
+
+    Ok(Json(HomeStats {
+        total_vocab: counts.total_vocab.unwrap_or(0),
+        due_today: counts.due_today.unwrap_or(0),
+        box1: counts.box1.unwrap_or(0),
+        box2: counts.box2.unwrap_or(0),
+        box3: counts.box3.unwrap_or(0),
+        box4: counts.box4.unwrap_or(0),
+        box5: counts.box5.unwrap_or(0),
+        streak_days,
+    }))
+}
+
+pub async fn get_vocab_stats(
+    Extension(pool): Extension<Pool<Postgres>>,
+    headers: HeaderMap,
+    Path(user_id): Path<i32>,
+) -> Result<Json<VocabStats>, StatusCode> {
+    extract_and_verify_token(&headers, user_id)?;
+
+    let counts = sqlx::query!(
+        r#"
+        SELECT
+            COUNT(*)                                          AS total_vocab,
+            COUNT(*) FILTER (WHERE next_review <= NOW())     AS due_today,
+            COUNT(*) FILTER (WHERE box_number = 1)          AS box1,
+            COUNT(*) FILTER (WHERE box_number = 2)          AS box2,
+            COUNT(*) FILTER (WHERE box_number = 3)          AS box3,
+            COUNT(*) FILTER (WHERE box_number = 4)          AS box4,
+            COUNT(*) FILTER (WHERE box_number = 5)          AS box5,
+            COALESCE(SUM(total_reviews),   0)               AS total_reviews,
+            COALESCE(SUM(correct_reviews), 0)               AS correct_reviews
+        FROM user_vocab_progress
+        WHERE user_id = $1
+        "#,
+        user_id
+    )
+    .fetch_one(&pool)
+    .await
+    .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+
+    let total_reviews   = counts.total_reviews.unwrap_or(0);
+    let correct_reviews = counts.correct_reviews.unwrap_or(0);
+    let accuracy_pct    = if total_reviews > 0 {
+        (correct_reviews * 100) / total_reviews
+    } else {
+        0
+    };
+
+    let heatmap_rows = sqlx::query!(
+        r#"
+        SELECT
+            d.day::DATE           AS "date!: NaiveDate",
+            COALESCE(rc.count, 0) AS "count!: i64"
+        FROM generate_series(
+            (CURRENT_DATE - INTERVAL '34 days')::DATE,
+            CURRENT_DATE,
+            INTERVAL '1 day'
+        ) AS d(day)
+        LEFT JOIN daily_review_counts rc
+            ON rc.review_date = d.day AND rc.user_id = $1
+        ORDER BY d.day ASC
+        "#,
+        user_id
+    )
+    .fetch_all(&pool)
+    .await
+    .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+
+    let heatmap: Vec<DayActivity> = heatmap_rows
+        .into_iter()
+        .map(|r| DayActivity { date: r.date, count: r.count })
+        .collect();
+
+    Ok(Json(VocabStats {
+        total_vocab:    counts.total_vocab.unwrap_or(0),
+        due_today:      counts.due_today.unwrap_or(0),
+        box1:           counts.box1.unwrap_or(0),
+        box2:           counts.box2.unwrap_or(0),
+        box3:           counts.box3.unwrap_or(0),
+        box4:           counts.box4.unwrap_or(0),
+        box5:           counts.box5.unwrap_or(0),
+        total_reviews,
+        correct_reviews,
+        accuracy_pct,
+        heatmap,
+    }))
+}
+
+pub async fn get_user_vocab_list(
+    Extension(pool): Extension<Pool<Postgres>>,
+    headers: HeaderMap,
+    Path(user_id): Path<i32>,
+) -> Result<Json<Vec<VocabWithProgress>>, StatusCode> {
+    extract_and_verify_token(&headers, user_id)?;
+
+    let vocab_list = sqlx::query_as!(
+        VocabWithProgress,
+        r#"
+        SELECT v.id, v.word, v.definition, v.example_sentence, v.picture_url, v.hint,
+               p.id AS progress_id, p.box_number, p.last_reviewed, p.next_review, p.correct_streak
+        FROM vocab v
+        JOIN user_vocab_progress p ON v.id = p.vocab_id
+        WHERE p.user_id = $1
+        ORDER BY v.word ASC
+        "#,
+        user_id
+    )
+    .fetch_all(&pool)
+    .await
+    .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+
+    Ok(Json(vocab_list))
+}
+
+/// Berechnet den aktuellen Lern-Streak aus einer absteigend sortierten
+/// Liste von Tagen, an denen der User mindestens eine Vokabel reviewed hat.
+pub fn calculate_streak(dates: &[NaiveDate]) -> i64 {
+    if dates.is_empty() {
+        return 0;
+    }
+
+    let today = Local::now().date_naive();
+    let most_recent = dates[0];
+
+    if most_recent < today - Duration::days(1) {
+        return 0;
+    }
+
+    let mut expected = most_recent;
+    let mut streak: i64 = 0;
+
+    for &date in dates {
+        if date == expected {
+            streak += 1;
+            expected -= Duration::days(1);
+        } else {
+            break;
+        }
+    }
+
+    streak
+}

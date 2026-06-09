@@ -87,6 +87,16 @@ pub struct DayActivity {
     pub count: i64,
 }
 
+/// Paginiertes Ergebnis für GET /vocab
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct PaginatedVocab {
+    pub items: Vec<VocabStruct>,
+    pub total: i64,
+    pub page: i64,
+    pub limit: i64,
+}
+
 /// Erweitererte Statistiken für die Vokabeln-Übersichtsansicht
 #[derive(Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]

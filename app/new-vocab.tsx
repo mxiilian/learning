@@ -17,11 +17,6 @@ import {
 import * as ImagePicker from 'expo-image-picker';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useFonts } from 'expo-font';
-import { Caveat_400Regular, Caveat_700Bold } from '@expo-google-fonts/caveat';
-import { Kalam_400Regular, Kalam_700Bold } from '@expo-google-fonts/kalam';
-import { NotoSansKR_400Regular, NotoSansKR_700Bold } from '@expo-google-fonts/noto-sans-kr';
-
 import ProtectedRoute from '@/components/ProtectedRoute';
 import { getUserId } from '@/services/authService';
 import { createVocab, uploadImage, addVocabToUser } from '@/services/vocabService';
@@ -34,12 +29,6 @@ type SheetMode = 'choose' | 'url';
 export default function NewVocabScreen() {
     const router = useRouter();
     const insets = useSafeAreaInsets();
-
-    const [fontsLoaded] = useFonts({
-        Caveat_400Regular, Caveat_700Bold,
-        Kalam_400Regular, Kalam_700Bold,
-        NotoSansKR_400Regular, NotoSansKR_700Bold,
-    });
 
     // ── Formular-State ────────────────────────────────────────────
     const [word,            setWord]            = useState('');
@@ -163,8 +152,6 @@ export default function NewVocabScreen() {
             setSaving(false);
         }
     };
-
-    if (!fontsLoaded) return null;
 
     // ── Render ────────────────────────────────────────────────────
     return (

@@ -55,5 +55,17 @@ export async function deleteUserSession() {
 
 export async function isAuthenticated(): Promise<boolean> {
     const token = await getToken();
-    return token !== null;
+    if (token === null) return false;
+    try {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        if (typeof payload.exp === 'number' && payload.exp < Date.now() / 1000) {
+            await deleteUserSession();
+            return false;
+        }
+    } catch {
+        // malformed token — treat as unauthenticated
+        await deleteUserSession();
+        return false;
+    }
+    return true;
 }

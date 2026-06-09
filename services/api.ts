@@ -30,6 +30,9 @@ export async function apiFetch<T>(path: string, options?: RequestInit): Promise<
     });
 
     if (!response.ok) {
+        if (response.status === 401 || response.status === 403) {
+            throw new Error(`UNAUTHORIZED:${response.status}`);
+        }
         throw new Error(`API request failed with status ${response.status}`);
     }
 

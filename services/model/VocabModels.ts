@@ -19,6 +19,7 @@ export type VocabWithProgress = {
     definition: string;
     exampleSentence: string;
     pictureUrl?: string;
+    hint?: string;
     progressId: number;
     boxNumber: number;
     lastReviewed?: string;

@@ -27,12 +27,19 @@ export type CreateVocab = {
 // Vokabeln
 // ---------------------------------------------------------------------------
 
-/** Alle öffentlichen + eigene private Vokabeln (falls eingeloggt) */
-export async function getVocabs(): Promise<Vocab[]> {
+export type PaginatedVocab = {
+    items: Vocab[];
+    total: number;
+    page: number;
+    limit: number;
+};
+
+/** Alle öffentlichen + eigene private Vokabeln (falls eingeloggt), paginiert */
+export async function getVocabs(page = 1, limit = 20): Promise<PaginatedVocab> {
     const token = await getToken();
     const headers: Record<string, string> = {};
     if (token) headers['Authorization'] = `Bearer ${token}`;
-    return apiFetch<Vocab[]>('/vocab', { headers });
+    return apiFetch<PaginatedVocab>(`/vocab?page=${page}&limit=${limit}`, { headers });
 }
 
 /** Einzelne Vokabel */
@@ -63,6 +70,15 @@ export async function addVocabToUser(userId: number, vocabId: number): Promise<V
     });
 }
 
+/** Alle Vokabeln des Users mit aktuellem Lernfortschritt, alphabetisch sortiert */
+export async function getUserVocabList(userId: number): Promise<VocabWithProgress[]> {
+    const token = await getToken();
+    if (!token) throw new Error('Nicht eingeloggt');
+    return apiFetch<VocabWithProgress[]>(`/users/${userId}/vocab-list`, {
+        headers: { Authorization: `Bearer ${token}` },
+    });
+}
+
 /** Vokabeln, die aktuell zur Wiederholung fällig sind */
 export async function getDueVocabs(userId: number): Promise<VocabWithProgress[]> {
     const token = await getToken();
@@ -78,6 +94,7 @@ export async function submitReview(
     correct: boolean
 ): Promise<VocabProgress> {
     const token = await getToken();
+    if (!token) throw new Error('Nicht eingeloggt');
     return apiFetch<VocabProgress>(`/users/${userId}/review`, {
         method: 'POST',
         headers: { Authorization: `Bearer ${token}` },
@@ -92,6 +109,7 @@ export async function submitReview(
 /** Statistiken für die Home-Ansicht laden */
 export async function getHomeStats(userId: number): Promise<HomeStats> {
     const token = await getToken();
+    if (!token) throw new Error('Nicht eingeloggt');
     return apiFetch<HomeStats>(`/users/${userId}/stats`, {
         headers: { Authorization: `Bearer ${token}` },
     });
@@ -132,6 +150,7 @@ export async function uploadImage(localUri: string): Promise<string> {
 /** Erweiterte Statistiken für die Vokabeln-Übersichtsansicht (inkl. Genauigkeit + Heatmap) */
 export async function getVocabStats(userId: number): Promise<VocabStats> {
     const token = await getToken();
+    if (!token) throw new Error('Nicht eingeloggt');
     return apiFetch<VocabStats>(`/users/${userId}/vocab-stats`, {
         headers: { Authorization: `Bearer ${token}` },
     });
