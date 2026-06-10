@@ -16,6 +16,8 @@ export default function TabLayout() {
         >
             <Tabs.Screen name="dashboard" />
             <Tabs.Screen name="vocab" />
+            <Tabs.Screen name="grammar" />
+            <Tabs.Screen name="profile" />
         </Tabs>
     );
 }

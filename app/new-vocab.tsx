@@ -1,7 +1,14 @@
-import React, { useEffect, useRef, useState } from 'react';
+import ProtectedRoute from '@/components/ProtectedRoute';
+import { getUserId } from '@/services/authService';
+import { addVocabToUser, createVocab, uploadImage } from '@/services/vocabService';
+import { newVocabStyles as s } from '@/styles/new-vocab.styles';
+import { Colors } from '@/styles/theme';
+import * as ImagePicker from 'expo-image-picker';
+import { useRouter } from 'expo-router';
+import { useEffect, useRef, useState } from 'react';
 import {
-    Animated,
     ActivityIndicator,
+    Animated,
     Image,
     Keyboard,
     KeyboardAvoidingView,
@@ -14,14 +21,7 @@ import {
     TextInput,
     View,
 } from 'react-native';
-import * as ImagePicker from 'expo-image-picker';
-import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import ProtectedRoute from '@/components/ProtectedRoute';
-import { getUserId } from '@/services/authService';
-import { createVocab, uploadImage, addVocabToUser } from '@/services/vocabService';
-import { newVocabStyles as s } from '@/styles/new-vocab.styles';
-import { Colors } from '@/styles/theme';
 
 // ─── Typen für das Bild-Sheet ──────────────────────────────────────
 type SheetMode = 'choose' | 'url';
@@ -194,6 +194,20 @@ export default function NewVocabScreen() {
                         </View>
                     )}
 
+                    {/* Wort (Koreanisch) */}
+                    <View style={s.fieldGroup}>
+                        <Text style={s.fieldLabel}>Wort (Koreanisch)</Text>
+                        <TextInput
+                            style={[s.input, s.inputKo]}
+                            value={word}
+                            onChangeText={setWord}
+                            placeholder="사과"
+                            placeholderTextColor={Colors.muted}
+                            autoCorrect={false}
+                            returnKeyType="next"
+                        />
+                    </View>
+
                     {/* Bild-Picker */}
                     <Text style={s.imageLabel}>Bild</Text>
                     <Pressable style={s.imagePicker} onPress={openSheet}>
@@ -217,20 +231,6 @@ export default function NewVocabScreen() {
                         )}
                     </Pressable>
 
-                    {/* Wort (Koreanisch) */}
-                    <View style={s.fieldGroup}>
-                        <Text style={s.fieldLabel}>Wort (Koreanisch)</Text>
-                        <TextInput
-                            style={[s.input, s.inputKo]}
-                            value={word}
-                            onChangeText={setWord}
-                            placeholder="예) 사과"
-                            placeholderTextColor={Colors.muted2}
-                            autoCorrect={false}
-                            returnKeyType="next"
-                        />
-                    </View>
-
                     {/* Definition */}
                     <View style={s.fieldGroup}>
                         <Text style={s.fieldLabel}>Definition</Text>
@@ -239,7 +239,7 @@ export default function NewVocabScreen() {
                             value={definition}
                             onChangeText={setDefinition}
                             placeholder="Übersetzung / Bedeutung"
-                            placeholderTextColor={Colors.muted2}
+                            placeholderTextColor={Colors.muted}
                             returnKeyType="next"
                         />
                     </View>
@@ -252,7 +252,7 @@ export default function NewVocabScreen() {
                             value={exampleSentence}
                             onChangeText={setExampleSentence}
                             placeholder="나는 사과를 먹어요."
-                            placeholderTextColor={Colors.muted2}
+                            placeholderTextColor={Colors.muted}
                             multiline
                             returnKeyType="next"
                         />
@@ -266,7 +266,7 @@ export default function NewVocabScreen() {
                             value={hint}
                             onChangeText={setHint}
                             placeholder="z.B. rote Frucht, Buchstabe ㅅ..."
-                            placeholderTextColor={Colors.muted2}
+                            placeholderTextColor={Colors.muted}
                             multiline
                             returnKeyType="done"
                         />
@@ -411,7 +411,7 @@ function ImageSourceSheet({
                 value={urlInput}
                 onChangeText={onUrlChange}
                 placeholder="https://example.com/bild.jpg"
-                placeholderTextColor={Colors.muted2}
+                placeholderTextColor={Colors.muted}
                 autoCapitalize="none"
                 autoCorrect={false}
                 keyboardType="url"

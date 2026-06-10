@@ -1,58 +1,31 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import ProtectedRoute from '@/components/ProtectedRoute';
+import TabBar from '@/components/TabBar';
+import { useData } from '@/context/DataContext';
+import { getUserId } from '@/services/authService';
+import { VocabWithProgress } from '@/services/model/VocabModels';
+import { VocabStats } from '@/services/model/vocabStatsModel';
+import { Colors, Fonts } from '@/styles/theme';
+import { vocabStyles as s } from '@/styles/vocab.styles';
+import { useFocusEffect, useRouter } from 'expo-router';
+import { useCallback, useEffect, useState } from 'react';
 import {
     ActivityIndicator,
-    Dimensions,
     Pressable,
     RefreshControl,
     ScrollView,
     Text,
     View,
 } from 'react-native';
-import Svg, { Circle, Text as SvgText } from 'react-native-svg';
-import { useRouter, useFocusEffect } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import ProtectedRoute from '@/components/ProtectedRoute';
-import TabBar from '@/components/TabBar';
-import { getUserId } from '@/services/authService';
-import { VocabStats } from '@/services/model/vocabStatsModel';
-import { VocabWithProgress } from '@/services/model/VocabModels';
-import { useData } from '@/context/DataContext';
-import { vocabStyles as s } from '@/styles/vocab.styles';
-import { Colors, Fonts } from '@/styles/theme';
+import Svg, { Circle } from 'react-native-svg';
 
 // ─── Konstanten ───────────────────────────────────────────────────
-const DONUT_SIZE     = 72;
-const DONUT_RADIUS   = 28;
-const DONUT_STROKE   = 8;
-const DONUT_CIRC     = 2 * Math.PI * DONUT_RADIUS; // ≈ 175.9
+const DONUT_SIZE     = 120;
+const DONUT_RADIUS   = 55;
+const DONUT_STROKE   = 10;
+const DONUT_CIRC     = 2 * Math.PI * DONUT_RADIUS; // ≈ 270.2
 
 const BOX_INTERVALS  = ['täglich', 'alle 2 T.', 'alle 4 T.', 'wöchentl.', 'monatl.'];
-
-// Heatmap-Zellgröße: 7 Spalten, je 3 px Abstand, Card-Padding 12 px beidseitig,
-// Screen-Padding 18 px beidseitig → exakte Pixelgröße statt %-Angabe
-const SCREEN_WIDTH     = Dimensions.get('window').width;
-const HEATMAP_H_PAD    = 18 * 2 + 12 * 2;          // screen padding + card padding
-const HEATMAP_GAP      = 3;
-const HEATMAP_COLS     = 7;
-const CELL_SIZE        = Math.floor(
-    (SCREEN_WIDTH - HEATMAP_H_PAD - (HEATMAP_COLS - 1) * HEATMAP_GAP) / HEATMAP_COLS
-);
-
-
-// ─── Heatmap-Hilfsfunktion: count → Level 0–3 ─────────────────────
-function countToLevel(count: number): 0 | 1 | 2 | 3 {
-    if (count === 0) return 0;
-    if (count <= 3)  return 1;
-    if (count <= 8)  return 2;
-    return 3;
-}
-
-const HEATMAP_COLORS: Record<0 | 1 | 2 | 3, string> = {
-    0: Colors.paper,
-    1: Colors.paper2,
-    2: Colors.muted2,
-    3: Colors.ink,
-};
 
 // ─── Haupt-Screen ─────────────────────────────────────────────────
 export default function VocabScreen() {
@@ -127,9 +100,9 @@ export default function VocabScreen() {
         );
     }
 
-    const total    = stats?.totalVocab   ?? 0;
-    const due      = stats?.dueToday     ?? 0;
-    const accuracy = stats?.accuracyPct  ?? 0;
+    const total    = stats?.totalVocab  ?? 0;
+    const due      = stats?.dueToday    ?? 0;
+    const accuracy = stats?.accuracyPct ?? 0;
     const boxes    = [
         { n: 1, count: stats?.box1 ?? 0 },
         { n: 2, count: stats?.box2 ?? 0 },
@@ -138,7 +111,6 @@ export default function VocabScreen() {
         { n: 5, count: stats?.box5 ?? 0 },
     ];
     const maxBoxCount = Math.max(...boxes.map(b => b.count), 1);
-    const heatmap = stats?.heatmap ?? [];
 
     // Donut: Anteil der Genauigkeit
     const dashOffset = DONUT_CIRC - (accuracy / 100) * DONUT_CIRC;
@@ -186,57 +158,59 @@ export default function VocabScreen() {
 
                     {/* Donut-Zusammenfassung */}
                     <View style={[s.card, s.summaryCard]}>
-                        {/* SVG-Donut */}
-                        <Svg
-                            width={DONUT_SIZE}
-                            height={DONUT_SIZE}
-                            viewBox={`0 0 ${DONUT_SIZE} ${DONUT_SIZE}`}
-                        >
-                            {/* Hintergrundring */}
-                            <Circle
-                                cx={DONUT_SIZE / 2}
-                                cy={DONUT_SIZE / 2}
-                                r={DONUT_RADIUS}
-                                fill="none"
-                                stroke={Colors.paper2}
-                                strokeWidth={DONUT_STROKE}
-                            />
-                            {/* Fortschrittsring */}
-                            <Circle
-                                cx={DONUT_SIZE / 2}
-                                cy={DONUT_SIZE / 2}
-                                r={DONUT_RADIUS}
-                                fill="none"
-                                stroke={Colors.ink}
-                                strokeWidth={DONUT_STROKE}
-                                strokeDasharray={DONUT_CIRC}
-                                strokeDashoffset={dashOffset}
-                                strokeLinecap="round"
-                                transform={`rotate(-90 ${DONUT_SIZE / 2} ${DONUT_SIZE / 2})`}
-                            />
-                            {/* Prozentzahl */}
-                            <SvgText
-                                x={DONUT_SIZE / 2}
-                                y={DONUT_SIZE / 2 - 2}
-                                textAnchor="middle"
-                                fontFamily={Fonts.caveat}
-                                fontSize={16}
-                                fontWeight="700"
-                                fill={Colors.ink}
+                        {/* SVG-Donut + RN-Text-Overlay */}
+                        <View style={{ width: DONUT_SIZE, height: DONUT_SIZE }}>
+                            <Svg
+                                width={DONUT_SIZE}
+                                height={DONUT_SIZE}
+                                viewBox={`0 0 ${DONUT_SIZE} ${DONUT_SIZE}`}
                             >
-                                {accuracy}%
-                            </SvgText>
-                            <SvgText
-                                x={DONUT_SIZE / 2}
-                                y={DONUT_SIZE / 2 + 11}
-                                textAnchor="middle"
-                                fontFamily={Fonts.mono}
-                                fontSize={7}
-                                fill={Colors.muted}
-                            >
-                                GENAU
-                            </SvgText>
-                        </Svg>
+                                <Circle
+                                    cx={DONUT_SIZE / 2}
+                                    cy={DONUT_SIZE / 2}
+                                    r={DONUT_RADIUS}
+                                    fill="none"
+                                    stroke={Colors.muted2}
+                                    strokeWidth={DONUT_STROKE}
+                                />
+                                <Circle
+                                    cx={DONUT_SIZE / 2}
+                                    cy={DONUT_SIZE / 2}
+                                    r={DONUT_RADIUS}
+                                    fill="none"
+                                    stroke={Colors.accent}
+                                    strokeWidth={DONUT_STROKE}
+                                    strokeDasharray={DONUT_CIRC}
+                                    strokeDashoffset={dashOffset}
+                                    strokeLinecap="round"
+                                    transform={`rotate(-90 ${DONUT_SIZE / 2} ${DONUT_SIZE / 2})`}
+                                />
+                            </Svg>
+                            <View style={{
+                                position:       'absolute',
+                                top: 0, left: 0, right: 0, bottom: 0,
+                                alignItems:     'center',
+                                justifyContent: 'center',
+                                gap:            2,
+                            }}>
+                                <Text style={{
+                                    fontFamily: Fonts.caveat,
+                                    fontSize:   22,
+                                    color:      Colors.ink,
+                                    lineHeight: 24,
+                                }}>
+                                    {accuracy}%
+                                </Text>
+                                <Text style={{
+                                    fontFamily:    Fonts.mono,
+                                    fontSize:      9,
+                                    color:         Colors.muted,
+                                    letterSpacing: 0.8,
+                                }}>
+                                    GENAU
+                                </Text>
+                            </View>
+                        </View>
 
                         {/* Rechte Seite */}
                         <View style={s.summaryRight}>
@@ -293,56 +267,6 @@ export default function VocabScreen() {
                                     </View>
                                 );
                             })}
-                        </View>
-                    </View>
-
-                    {/* Aktivitäts-Heatmap */}
-                    <View style={[s.card, s.heatmapCard]}>
-                        <View style={s.heatmapHeader}>
-                            <Text style={s.cardTitle}>Aktivität</Text>
-                            <Text style={s.subText}>5 Wochen</Text>
-                        </View>
-                        {/* 5 Zeilen à 7 Tage */}
-                        <View style={{ gap: HEATMAP_GAP }}>
-                            {Array.from({ length: 5 }).map((_, row) => (
-                                <View
-                                    key={row}
-                                    style={{ flexDirection: 'row', gap: HEATMAP_GAP }}
-                                >
-                                    {Array.from({ length: 7 }).map((_, col) => {
-                                        const idx   = row * 7 + col;
-                                        const day   = heatmap[idx];
-                                        const level = day ? countToLevel(day.count) : 0;
-                                        return (
-                                            <View
-                                                key={col}
-                                                style={{
-                                                    width:           CELL_SIZE,
-                                                    height:          CELL_SIZE,
-                                                    borderRadius:    3,
-                                                    borderWidth:     1,
-                                                    borderColor:     Colors.ink,
-                                                    backgroundColor: HEATMAP_COLORS[level],
-                                                }}
-                                            />
-                                        );
-                                    })}
-                                </View>
-                            ))}
-                        </View>
-                        {/* Legende */}
-                        <View style={s.heatmapLegend}>
-                            <Text style={s.heatmapLegendText}>weniger</Text>
-                            {([0, 1, 2, 3] as const).map(lvl => (
-                                <View
-                                    key={lvl}
-                                    style={[
-                                        s.heatmapLegendDot,
-                                        { backgroundColor: HEATMAP_COLORS[lvl] },
-                                    ]}
-                                />
-                            ))}
-                            <Text style={s.heatmapLegendText}>mehr</Text>
                         </View>
                     </View>
 

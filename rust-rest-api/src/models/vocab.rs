@@ -73,6 +73,12 @@ pub struct HomeStats {
     pub box3: i64,
     pub box4: i64,
     pub box5: i64,
+    /// Davon heute fällig pro Box
+    pub due_box1: i64,
+    pub due_box2: i64,
+    pub due_box3: i64,
+    pub due_box4: i64,
+    pub due_box5: i64,
     /// Lern-Streak in Tagen (konsekutive Tage mit mind. 1 Review)
     pub streak_days: i64,
 }

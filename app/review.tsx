@@ -18,7 +18,7 @@ import Animated, {
     withSpring,
     withTiming,
 } from 'react-native-reanimated';
-import { Gesture, GestureDetector } from 'react-native-gesture-handler';
+import { Gesture, GestureDetector, ScrollView as GHScrollView } from 'react-native-gesture-handler';
 
 import ProtectedRoute from '@/components/ProtectedRoute';
 import { getUserId } from '@/services/authService';
@@ -183,6 +183,7 @@ export default function ReviewScreen() {
     const panGesture = Gesture.Pan()
         .runOnJS(true)
         .minDistance(15)
+        .failOffsetY([-20, 20])
         .onUpdate((e) => {
             if (flipAnim.value > 0.5) {
                 translateX.value = e.translationX;
@@ -399,22 +400,29 @@ export default function ReviewScreen() {
                                 {/* ─────────── Rückseite ─────────── */}
                                 {isFlipped && (
                                     <Pressable style={[s.cardFace, s.cardBack]} onPress={handleCardPress}>
-                                        <Text style={s.cardLabel}>Lösung</Text>
-                                        <Text style={s.koreanWord}>{card.word}</Text>
+                                        <GHScrollView
+                                            style={{ flex: 1 }}
+                                            showsVerticalScrollIndicator={false}
+                                            bounces={true}
+                                            keyboardShouldPersistTaps="handled"
+                                        >
+                                            <Text style={s.cardLabel}>Lösung</Text>
+                                            <Text style={s.koreanWord}>{card.word}</Text>
 
-                                        <View style={s.divider} />
+                                            <View style={s.divider} />
 
-                                        <Text style={s.cardLabel}>Übersetzung</Text>
-                                        <Text style={s.definitionText}>{card.definition}</Text>
+                                            <Text style={s.cardLabel}>Übersetzung</Text>
+                                            <Text style={s.definitionText}>{card.definition}</Text>
 
-                                        {!!card.exampleSentence && (
-                                            <>
-                                                <Text style={[s.cardLabel, { marginTop: 10 }]}>Beispielsatz</Text>
-                                                <Text style={s.exampleKoText}>{card.exampleSentence}</Text>
-                                            </>
-                                        )}
+                                            {!!card.exampleSentence && (
+                                                <>
+                                                    <Text style={[s.cardLabel, { marginTop: 10 }]}>Beispielsatz</Text>
+                                                    <Text style={s.exampleKoText}>{card.exampleSentence}</Text>
+                                                </>
+                                            )}
 
-                                        <Text style={s.tapHint}>Nach links oder rechts wischen</Text>
+                                            <Text style={[s.tapHint, { marginTop: 16 }]}>Nach links oder rechts wischen</Text>
+                                        </GHScrollView>
                                     </Pressable>
                                 )}
 

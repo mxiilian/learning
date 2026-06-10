@@ -22,6 +22,7 @@ use handlers::vocab::{create_vocab, delete_vocab, get_vocab, get_vocabs, update_
 use handlers::users::{create_user, get_user, login_user, username_exists};
 use handlers::review::{add_vocab_to_user, get_due_vocabs, submit_review};
 use handlers::stats::{get_home_stats, get_vocab_stats, get_user_vocab_list};
+use handlers::debug::time_travel;
 
 type LoginLimiter = RateLimiter<IpAddr, DashMapStateStore<IpAddr>, DefaultClock>;
 
@@ -99,6 +100,8 @@ async fn main() -> Result<(), sqlx::Error> {
         .route("/users/{id}/vocab-stats", get(get_vocab_stats))
         // Alle Vokabeln des Users mit Lernfortschritt
         .route("/users/{id}/vocab-list", get(get_user_vocab_list))
+        // Debug (nur für Entwicklung)
+        .route("/debug/users/{id}/time-travel", post(time_travel))
         // Bild-Upload (erfordert Auth) + statische Auslieferung
         .route("/upload/image", post(upload_image))
         .nest_service("/uploads", ServeDir::new("uploads"))

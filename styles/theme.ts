@@ -1,26 +1,32 @@
 import { Platform, StyleSheet } from 'react-native';
 
-// ─── Farben (entsprechen den CSS-Variablen im Wireframe) ──────────
+// ─── Farben ───────────────────────────────────────────────────────
 export const Colors = {
-    ink:        '#1a1a1a',
-    inkSoft:    '#2d2d2d',
-    muted:      '#6b6b6b',
-    muted2:     '#a3a3a3',
-    paper:      '#fbf9f4',
-    paper2:     '#f3f0e8',
-    accent:     '#d4912a',   // oklch(72% 0.12 55) – warmes Amber
-    accentSoft: '#faf2e4',   // oklch(92% 0.04 55)
-    good:       '#5aaa72',   // oklch(70% 0.12 150)
-    bad:        '#d95c4a',   // oklch(66% 0.15 25)
-    badSoft:    '#fdf0ee',
+    ink:        '#ede9e4',
+    inkSoft:    '#b0aca8',
+    muted:      '#72728a',
+    muted2:     '#32324a',
+    paper:      '#090910',
+    paper2:     '#13131e',
+    border:     'rgba(255,255,255,0.09)' as string,
+    accent:     '#f97316',
+    accentSoft: '#1c1208',
+    good:       '#22c55e',
+    bad:        '#ef4444',
+    badSoft:    '#180808',
 };
 
 // ─── Font-Familien ────────────────────────────────────────────────
+// 3 Schriftfamilien (Koreanisch ausgenommen):
+//   1. Syne_800ExtraBold   – Display / Überschriften / große Zahlen
+//   2. Outfit_*             – UI-Text, Buttons, Labels
+//   3. System Mono          – technische Kleinstbeschriftungen
 export const Fonts = {
-    caveat:     'Caveat_700Bold',
-    caveatReg:  'Caveat_400Regular',
-    kalam:      'Kalam_700Bold',
-    kalamReg:   'Kalam_400Regular',
+    caveat:     'Syne_800ExtraBold',     // Display: Zahlen, Titel, Brand
+    caveatReg:  'Outfit_400Regular',     // früher casual Caveat Regular
+    kalam:      'Outfit_700Bold',        // bold UI-Text, Buttons
+    kalamReg:   'Outfit_400Regular',     // regulärer UI-Text
+    kalamMed:   'Outfit_600SemiBold',    // mittleres Gewicht
     notoKR:     'NotoSansKR_400Regular',
     notoKRBold: 'NotoSansKR_700Bold',
     mono:       Platform.select({
@@ -30,16 +36,16 @@ export const Fonts = {
     }) as string,
 };
 
-// ─── Schatten (Ink-Offset-Look aus dem Wireframe) ─────────────────
+// ─── Schatten ─────────────────────────────────────────────────────
 export const Shadows = {
     card: Platform.select({
         ios: {
-            shadowColor:   Colors.ink,
-            shadowOffset:  { width: 1.5, height: 2 },
-            shadowOpacity: 1,
-            shadowRadius:  0,
+            shadowColor:   '#000000',
+            shadowOffset:  { width: 0, height: 2 },
+            shadowOpacity: 0.5,
+            shadowRadius:  10,
         },
-        android: { elevation: 3 },
+        android: { elevation: 6 },
         default: {},
     }),
     cardFlat: Platform.select({
@@ -49,22 +55,22 @@ export const Shadows = {
     }),
     tabbar: Platform.select({
         ios: {
-            shadowColor:   Colors.ink,
-            shadowOffset:  { width: 1, height: 2 },
-            shadowOpacity: 1,
-            shadowRadius:  0,
+            shadowColor:   '#000000',
+            shadowOffset:  { width: 0, height: 6 },
+            shadowOpacity: 0.55,
+            shadowRadius:  20,
         },
-        android: { elevation: 4 },
+        android: { elevation: 12 },
         default: {},
     }),
     button: Platform.select({
         ios: {
-            shadowColor:   Colors.ink,
-            shadowOffset:  { width: 1.5, height: 2 },
-            shadowOpacity: 1,
-            shadowRadius:  0,
+            shadowColor:   '#f97316',
+            shadowOffset:  { width: 0, height: 3 },
+            shadowOpacity: 0.4,
+            shadowRadius:  8,
         },
-        android: { elevation: 3 },
+        android: { elevation: 4 },
         default: {},
     }),
     buttonDisabled: Platform.select({
@@ -76,43 +82,38 @@ export const Shadows = {
 
 // ─── Wiederverwendbare Basis-Styles ───────────────────────────────
 export const Base = StyleSheet.create({
-    // Karten
     card: {
-        borderWidth:     1.5,
-        borderColor:     Colors.ink,
-        borderRadius:    14,
-        backgroundColor: Colors.paper,
-        padding:         12,
+        borderWidth:     1,
+        borderColor:     'rgba(255,255,255,0.09)',
+        borderRadius:    18,
+        backgroundColor: Colors.paper2,
+        padding:         18,
         ...Shadows.card,
     },
     cardFlat: {
-        borderWidth:     1.5,
-        borderColor:     Colors.ink,
-        borderRadius:    14,
-        backgroundColor: Colors.paper,
-        padding:         12,
+        borderWidth:     1,
+        borderColor:     'rgba(255,255,255,0.09)',
+        borderRadius:    18,
+        backgroundColor: Colors.paper2,
+        padding:         18,
         ...Shadows.cardFlat,
     },
 
-    // Chips (Border-Pill)
     chip: {
-        borderWidth:       1.5,
-        borderColor:       Colors.ink,
+        borderWidth:       1,
+        borderColor:       'rgba(255,255,255,0.12)',
         borderRadius:      999,
-        paddingHorizontal: 10,
-        paddingVertical:   3,
-        backgroundColor:   Colors.paper,
+        paddingHorizontal: 12,
+        paddingVertical:   5,
+        backgroundColor:   Colors.paper2,
     },
 
-    // Haupt-Button (akzentfarben)
     primaryBtn: {
-        borderWidth:     1.5,
-        borderColor:     Colors.ink,
-        borderRadius:    10,
-        paddingVertical: 10,
-        paddingHorizontal: 14,
-        backgroundColor: Colors.accent,
-        alignItems:      'center' as const,
+        borderRadius:      16,
+        paddingVertical:   16,
+        paddingHorizontal: 20,
+        backgroundColor:   Colors.accent,
+        alignItems:        'center' as const,
         ...Shadows.button,
     },
     primaryBtnDisabled: {
@@ -120,49 +121,47 @@ export const Base = StyleSheet.create({
         ...Shadows.buttonDisabled,
     },
 
-    // Eingabefelder
     input: {
-        borderWidth:     1.5,
-        borderColor:     Colors.ink,
-        borderRadius:    12,
-        padding:         14,
+        borderWidth:     1,
+        borderColor:     'rgba(255,255,255,0.12)',
+        borderRadius:    14,
+        padding:         17,
         marginBottom:    14,
-        fontSize:        16,
-        backgroundColor: Colors.paper,
+        fontSize:        17,
+        backgroundColor: Colors.paper2,
         color:           Colors.ink,
     },
 
-    // Typografie
     caveatTitle: {
         fontFamily: Fonts.caveat,
-        fontSize:   28,
+        fontSize:   32,
         color:      Colors.ink,
     },
     kalamBody: {
         fontFamily: Fonts.kalamReg,
-        fontSize:   14,
+        fontSize:   16,
         color:      Colors.ink,
     },
     kalamBold: {
         fontFamily: Fonts.kalam,
-        fontSize:   14,
+        fontSize:   16,
         color:      Colors.ink,
     },
     kalamSub: {
         fontFamily: Fonts.kalamReg,
-        fontSize:   13,
+        fontSize:   14,
         color:      Colors.muted,
     },
     monoLabel: {
         fontFamily:    Fonts.mono,
-        fontSize:      10,
+        fontSize:      11,
         textTransform: 'uppercase' as const,
-        letterSpacing: 1,
+        letterSpacing: 1.4,
         color:         Colors.muted,
     },
     koText: {
         fontFamily: Fonts.notoKR,
-        fontSize:   12,
+        fontSize:   14,
         color:      Colors.muted,
     },
 });

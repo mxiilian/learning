@@ -4,21 +4,21 @@ import { StatusBar } from 'expo-status-bar';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import * as SplashScreen from 'expo-splash-screen';
 import { useFonts } from 'expo-font';
-import { Caveat_400Regular, Caveat_700Bold } from '@expo-google-fonts/caveat';
-import { Kalam_400Regular, Kalam_700Bold } from '@expo-google-fonts/kalam';
+import { Syne_800ExtraBold } from '@expo-google-fonts/syne';
+import { Outfit_400Regular, Outfit_600SemiBold, Outfit_700Bold } from '@expo-google-fonts/outfit';
 import { NotoSansKR_400Regular, NotoSansKR_700Bold } from '@expo-google-fonts/noto-sans-kr';
 import { DataProvider } from '@/context/DataContext';
 
-const PAPER = '#fbf9f4';
+const BG = '#090910';
 
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
     const [fontsLoaded, fontError] = useFonts({
-        Caveat_400Regular,
-        Caveat_700Bold,
-        Kalam_400Regular,
-        Kalam_700Bold,
+        Syne_800ExtraBold,
+        Outfit_400Regular,
+        Outfit_600SemiBold,
+        Outfit_700Bold,
         NotoSansKR_400Regular,
         NotoSansKR_700Bold,
     });
@@ -34,20 +34,18 @@ export default function RootLayout() {
     return (
         <DataProvider>
         <GestureHandlerRootView style={{ flex: 1 }}>
-            <StatusBar style="dark" backgroundColor={PAPER} translucent={false} />
+            <StatusBar style="light" backgroundColor={BG} translucent={false} />
             <Stack
                 screenOptions={{
                     headerShown:  false,
-                    contentStyle: { backgroundColor: PAPER },
+                    contentStyle: { backgroundColor: BG },
                     animation:    'none',
                 }}
             >
-                {/* Neue Vokabel: von unten hochschieben wie ein Modal */}
                 <Stack.Screen
                     name="new-vocab"
                     options={{ animation: 'slide_from_bottom' }}
                 />
-                {/* Abfrage-Modus: von unten hochschieben */}
                 <Stack.Screen
                     name="review"
                     options={{ animation: 'slide_from_bottom' }}

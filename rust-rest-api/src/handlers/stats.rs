@@ -17,13 +17,18 @@ pub async fn get_home_stats(
     let counts = sqlx::query!(
         r#"
         SELECT
-            COUNT(*)                                         AS total_vocab,
-            COUNT(*) FILTER (WHERE next_review <= NOW())    AS due_today,
-            COUNT(*) FILTER (WHERE box_number = 1)         AS box1,
-            COUNT(*) FILTER (WHERE box_number = 2)         AS box2,
-            COUNT(*) FILTER (WHERE box_number = 3)         AS box3,
-            COUNT(*) FILTER (WHERE box_number = 4)         AS box4,
-            COUNT(*) FILTER (WHERE box_number = 5)         AS box5
+            COUNT(*)                                                              AS total_vocab,
+            COUNT(*) FILTER (WHERE next_review <= NOW())                         AS due_today,
+            COUNT(*) FILTER (WHERE box_number = 1)                              AS box1,
+            COUNT(*) FILTER (WHERE box_number = 2)                              AS box2,
+            COUNT(*) FILTER (WHERE box_number = 3)                              AS box3,
+            COUNT(*) FILTER (WHERE box_number = 4)                              AS box4,
+            COUNT(*) FILTER (WHERE box_number = 5)                              AS box5,
+            COUNT(*) FILTER (WHERE box_number = 1 AND next_review <= NOW())     AS due_box1,
+            COUNT(*) FILTER (WHERE box_number = 2 AND next_review <= NOW())     AS due_box2,
+            COUNT(*) FILTER (WHERE box_number = 3 AND next_review <= NOW())     AS due_box3,
+            COUNT(*) FILTER (WHERE box_number = 4 AND next_review <= NOW())     AS due_box4,
+            COUNT(*) FILTER (WHERE box_number = 5 AND next_review <= NOW())     AS due_box5
         FROM user_vocab_progress
         WHERE user_id = $1
         "#,
@@ -53,12 +58,17 @@ pub async fn get_home_stats(
 
     Ok(Json(HomeStats {
         total_vocab: counts.total_vocab.unwrap_or(0),
-        due_today: counts.due_today.unwrap_or(0),
-        box1: counts.box1.unwrap_or(0),
-        box2: counts.box2.unwrap_or(0),
-        box3: counts.box3.unwrap_or(0),
-        box4: counts.box4.unwrap_or(0),
-        box5: counts.box5.unwrap_or(0),
+        due_today:   counts.due_today.unwrap_or(0),
+        box1:        counts.box1.unwrap_or(0),
+        box2:        counts.box2.unwrap_or(0),
+        box3:        counts.box3.unwrap_or(0),
+        box4:        counts.box4.unwrap_or(0),
+        box5:        counts.box5.unwrap_or(0),
+        due_box1:    counts.due_box1.unwrap_or(0),
+        due_box2:    counts.due_box2.unwrap_or(0),
+        due_box3:    counts.due_box3.unwrap_or(0),
+        due_box4:    counts.due_box4.unwrap_or(0),
+        due_box5:    counts.due_box5.unwrap_or(0),
         streak_days,
     }))
 }

@@ -1,4 +1,12 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import ProtectedRoute from '@/components/ProtectedRoute';
+import TabBar from '@/components/TabBar';
+import { useData } from '@/context/DataContext';
+import { deleteUserSession, getUserId, getUsername } from '@/services/authService';
+import { HomeStats } from '@/services/model/statsModel';
+import { dashboardStyles as s } from '@/styles/dashboard.styles';
+import { Colors } from '@/styles/theme';
+import { useFocusEffect, useRouter } from 'expo-router';
+import { useCallback, useEffect, useState } from 'react';
 import {
     ActivityIndicator,
     Pressable,
@@ -7,15 +15,7 @@ import {
     Text,
     View,
 } from 'react-native';
-import { useRouter, useFocusEffect } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import ProtectedRoute from '@/components/ProtectedRoute';
-import TabBar from '@/components/TabBar';
-import { deleteUserSession, getUserId, getUsername } from '@/services/authService';
-import { HomeStats } from '@/services/model/statsModel';
-import { useData } from '@/context/DataContext';
-import { dashboardStyles as s } from '@/styles/dashboard.styles';
-import { Colors } from '@/styles/theme';
 
 // ─── Konstanten ───────────────────────────────────────────────────
 const BOX_INTERVALS = ['täglich', 'alle 3 Tage', 'wöchentlich', 'alle 2 Wochen', 'monatlich'];
@@ -120,16 +120,16 @@ export default function Dashboard() {
         );
     }
 
-    const dueCount  = stats?.dueToday   ?? 0;
+    const dueCount   = stats?.dueToday   ?? 0;
     const totalVocab = stats?.totalVocab ?? 0;
-    const estMin    = Math.max(1, Math.round((dueCount * 20) / 60));
+    const estMin     = Math.max(1, Math.round((dueCount * 20) / 60));
 
     const boxes = [
-        { n: 1, count: stats?.box1 ?? 0 },
-        { n: 2, count: stats?.box2 ?? 0 },
-        { n: 3, count: stats?.box3 ?? 0 },
-        { n: 4, count: stats?.box4 ?? 0 },
-        { n: 5, count: stats?.box5 ?? 0 },
+        { n: 1, count: stats?.box1 ?? 0, due: stats?.dueBox1 ?? 0 },
+        { n: 2, count: stats?.box2 ?? 0, due: stats?.dueBox2 ?? 0 },
+        { n: 3, count: stats?.box3 ?? 0, due: stats?.dueBox3 ?? 0 },
+        { n: 4, count: stats?.box4 ?? 0, due: stats?.dueBox4 ?? 0 },
+        { n: 5, count: stats?.box5 ?? 0, due: stats?.dueBox5 ?? 0 },
     ];
 
     // ── Haupt-Render ──────────────────────────────────────────────
@@ -154,10 +154,10 @@ export default function Dashboard() {
                 >
                     {/* Header */}
                     <View style={s.header}>
-                        <View>
+                        <Pressable onLongPress={() => router.push('/debug')} delayLongPress={800}>
                             <Text style={s.headerTitle}>안녕, {username}!</Text>
                             <Text style={s.headerKo}>오늘도 화이팅 ✊</Text>
-                        </View>
+                        </Pressable>
                         <View style={s.chip}>
                             <Text style={s.chipText}>🔥 {stats?.streakDays ?? 0}</Text>
                         </View>
@@ -185,7 +185,7 @@ export default function Dashboard() {
                             disabled={dueCount === 0}
                         >
                             <Text style={s.primaryBtnText}>
-                                {dueCount > 0 ? '▶  Jetzt üben' : '✓  Alles erledigt'}
+                                {dueCount > 0 ? 'Jetzt üben!' : '✓  Alles erledigt'}
                             </Text>
                         </Pressable>
                     </View>
@@ -216,9 +216,10 @@ export default function Dashboard() {
                                 key={b.n}
                                 n={b.n}
                                 count={b.count}
+                                due={b.due}
                                 total={totalVocab}
                                 interval={BOX_INTERVALS[i]}
-                                highlight={b.n === 1 && b.count > 0}
+                                highlight={b.due > 0}
                             />
                         ))}
                     </View>
@@ -231,9 +232,10 @@ export default function Dashboard() {
 }
 
 // ─── BoxRow ───────────────────────────────────────────────────────
-function BoxRow({ n, count, total, interval, highlight }: {
+function BoxRow({ n, count, due, total, interval, highlight }: {
     n: number;
     count: number;
+    due: number;
     total: number;
     interval: string;
     highlight: boolean;
@@ -248,7 +250,9 @@ function BoxRow({ n, count, total, interval, highlight }: {
             <View style={s.boxMid}>
                 <View style={s.boxTopRow}>
                     <Text style={s.boxLabel}>Box {n}</Text>
-                    <Text style={s.boxCount}>{count} Karten</Text>
+                    <Text style={s.boxCount}>
+                        {highlight ? `${due} / ${count} fällig` : `${count} Karten`}
+                    </Text>
                 </View>
                 <View style={s.barTrack}>
                     <View style={[s.barFill, { width: `${pct}%` as any }]} />
@@ -258,4 +262,3 @@ function BoxRow({ n, count, total, interval, highlight }: {
         </View>
     );
 }
-

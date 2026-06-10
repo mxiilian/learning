@@ -155,3 +155,22 @@ export async function getVocabStats(userId: number): Promise<VocabStats> {
         headers: { Authorization: `Bearer ${token}` },
     });
 }
+
+// ---------------------------------------------------------------------------
+// Debug
+// ---------------------------------------------------------------------------
+
+/**
+ * Verschiebt alle next_review-Daten des Users um `days` Tage.
+ * Positiv = in die Zukunft springen (Karten werden früher fällig).
+ * Negativ = rückgängig machen.
+ */
+export async function debugTimeTravel(userId: number, days: number): Promise<void> {
+    const token = await getToken();
+    if (!token) throw new Error('Nicht eingeloggt');
+    await apiFetch<void>(`/debug/users/${userId}/time-travel`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ days }),
+    });
+}

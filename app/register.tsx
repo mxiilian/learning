@@ -1,18 +1,14 @@
 import { useState } from 'react';
 import { useRouter } from 'expo-router';
-import { View, Text, TextInput, Pressable, Alert } from 'react-native';
-import { useFonts } from 'expo-font';
-import { Caveat_700Bold } from '@expo-google-fonts/caveat';
-import { Kalam_400Regular, Kalam_700Bold } from '@expo-google-fonts/kalam';
+import { View, Text, TextInput, Pressable, Alert, Keyboard, TouchableWithoutFeedback } from 'react-native';
 
 import { createUser } from '@/services/userService';
 import { CreateUser } from '@/services/model/userModel';
 import { authStyles as s } from '@/styles/auth.styles';
+import { Colors } from '@/styles/theme';
 
 export default function RegisterScreen() {
     const router = useRouter();
-
-    useFonts({ Caveat_700Bold, Kalam_400Regular, Kalam_700Bold });
 
     const [username, setUsername]               = useState('');
     const [password, setPassword]               = useState('');
@@ -46,6 +42,7 @@ export default function RegisterScreen() {
     }
 
     return (
+        <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
         <View style={s.container}>
             <Text style={s.brand}>안녕 한국</Text>
             <Text style={s.title}>Registrieren</Text>
@@ -53,6 +50,7 @@ export default function RegisterScreen() {
             <TextInput
                 style={s.input}
                 placeholder="Benutzername"
+                placeholderTextColor={Colors.muted}
                 value={username}
                 onChangeText={setUsername}
                 autoCapitalize="none"
@@ -61,6 +59,7 @@ export default function RegisterScreen() {
             <TextInput
                 style={s.input}
                 placeholder="Passwort"
+                placeholderTextColor={Colors.muted}
                 value={password}
                 onChangeText={setPassword}
                 secureTextEntry
@@ -68,6 +67,7 @@ export default function RegisterScreen() {
             <TextInput
                 style={s.input}
                 placeholder="Passwort bestätigen"
+                placeholderTextColor={Colors.muted}
                 value={confirmPassword}
                 onChangeText={setConfirmPassword}
                 secureTextEntry
@@ -80,6 +80,11 @@ export default function RegisterScreen() {
             >
                 <Text style={s.buttonText}>{loading ? 'Lade…' : 'Konto erstellen'}</Text>
             </Pressable>
+
+            <Pressable style={{ marginTop: 24 }} onPress={() => router.back()}>
+                <Text style={s.link}>Zurück zum Login</Text>
+            </Pressable>
         </View>
+        </TouchableWithoutFeedback>
     );
 }
