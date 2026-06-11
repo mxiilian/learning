@@ -1,0 +1,60 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        UPDATE user_vocab_progress\n        SET\n            box_number      = CASE\n                                WHEN $1 THEN LEAST(box_number + 1, 5)\n                                ELSE 1\n                              END,\n            correct_streak  = CASE WHEN $1 THEN correct_streak + 1 ELSE 0 END,\n            last_reviewed   = NOW(),\n            next_review     = CASE\n                                WHEN $1 THEN NOW() + (\n                                    CASE LEAST(box_number + 1, 5)\n                                        WHEN 1 THEN INTERVAL '1 day'\n                                        WHEN 2 THEN INTERVAL '3 days'\n                                        WHEN 3 THEN INTERVAL '7 days'\n                                        WHEN 4 THEN INTERVAL '14 days'\n                                        WHEN 5 THEN INTERVAL '30 days'\n                                    END\n                                )\n                                ELSE NOW() + INTERVAL '1 day'\n                              END,\n            total_reviews   = total_reviews + 1,\n            correct_reviews = correct_reviews + CASE WHEN $1 THEN 1 ELSE 0 END\n        WHERE user_id = $2 AND vocab_id = $3\n        RETURNING id, user_id, vocab_id, box_number, last_reviewed, next_review, correct_streak\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 1,
+        "name": "user_id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 2,
+        "name": "vocab_id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 3,
+        "name": "box_number",
+        "type_info": "Int2"
+      },
+      {
+        "ordinal": 4,
+        "name": "last_reviewed",
+        "type_info": "Timestamp"
+      },
+      {
+        "ordinal": 5,
+        "name": "next_review",
+        "type_info": "Timestamp"
+      },
+      {
+        "ordinal": 6,
+        "name": "correct_streak",
+        "type_info": "Int4"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Bool",
+        "Int4",
+        "Int4"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      true,
+      false,
+      false
+    ]
+  },
+  "hash": "d124f74996a85a504a8cd6b4f3a5a21f16220a7b25e5a019f87faa198c56e2f7"
+}

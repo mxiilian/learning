@@ -1,0 +1,22 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        SELECT DISTINCT DATE(last_reviewed)\n        FROM user_vocab_progress\n        WHERE user_id = $1 AND last_reviewed IS NOT NULL\n        ORDER BY 1 DESC\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "date",
+        "type_info": "Date"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int4"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "53f05a26ea620352d0997932880f22b37b00dee1ce34ce1626fd5df968e54957"
+}

@@ -1,0 +1,70 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO vocab (word, definition, example_sentence, picture_url,\n                              hint, created_by_user_id, is_public)\n           VALUES ($1, $2, $3, $4, $5, $6, $7)\n           RETURNING id, word, definition, example_sentence, picture_url,\n                     hint, is_public, created_by_user_id",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 1,
+        "name": "word",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 2,
+        "name": "definition",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "example_sentence",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 4,
+        "name": "picture_url",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 5,
+        "name": "hint",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 6,
+        "name": "is_public",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 7,
+        "name": "created_by_user_id",
+        "type_info": "Int4"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Varchar",
+        "Text",
+        "Text",
+        "Varchar",
+        "Text",
+        "Int4",
+        "Bool"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      true,
+      true,
+      true,
+      false,
+      true
+    ]
+  },
+  "hash": "17389e389c07daa01dde7f4550dff377d490e9657329617473dfe6f7a40b3e62"
+}

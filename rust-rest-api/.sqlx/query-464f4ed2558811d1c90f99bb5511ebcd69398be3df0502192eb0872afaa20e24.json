@@ -1,0 +1,59 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        INSERT INTO user_vocab_progress (user_id, vocab_id, box_number, next_review, correct_streak)\n        VALUES ($1, $2, 1, NOW(), 0)\n        RETURNING id, user_id, vocab_id, box_number, last_reviewed, next_review, correct_streak\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 1,
+        "name": "user_id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 2,
+        "name": "vocab_id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 3,
+        "name": "box_number",
+        "type_info": "Int2"
+      },
+      {
+        "ordinal": 4,
+        "name": "last_reviewed",
+        "type_info": "Timestamp"
+      },
+      {
+        "ordinal": 5,
+        "name": "next_review",
+        "type_info": "Timestamp"
+      },
+      {
+        "ordinal": 6,
+        "name": "correct_streak",
+        "type_info": "Int4"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int4",
+        "Int4"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      true,
+      false,
+      false
+    ]
+  },
+  "hash": "464f4ed2558811d1c90f99bb5511ebcd69398be3df0502192eb0872afaa20e24"
+}

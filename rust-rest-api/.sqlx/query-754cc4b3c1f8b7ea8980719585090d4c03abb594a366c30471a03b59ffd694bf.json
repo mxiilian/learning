@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        UPDATE user_vocab_progress\n        SET next_review = next_review - make_interval(days => $1)\n        WHERE user_id = $2\n        ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int4",
+        "Int4"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "754cc4b3c1f8b7ea8980719585090d4c03abb594a366c30471a03b59ffd694bf"
+}

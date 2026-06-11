@@ -1,0 +1,82 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        SELECT v.id, v.word, v.definition, v.example_sentence, v.picture_url, v.hint,\n               p.id as progress_id, p.box_number, p.last_reviewed, p.next_review, p.correct_streak\n        FROM vocab v\n        JOIN user_vocab_progress p ON v.id = p.vocab_id\n        WHERE p.user_id = $1 AND p.next_review <= NOW()\n        ORDER BY p.next_review ASC\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 1,
+        "name": "word",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 2,
+        "name": "definition",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "example_sentence",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 4,
+        "name": "picture_url",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 5,
+        "name": "hint",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 6,
+        "name": "progress_id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 7,
+        "name": "box_number",
+        "type_info": "Int2"
+      },
+      {
+        "ordinal": 8,
+        "name": "last_reviewed",
+        "type_info": "Timestamp"
+      },
+      {
+        "ordinal": 9,
+        "name": "next_review",
+        "type_info": "Timestamp"
+      },
+      {
+        "ordinal": 10,
+        "name": "correct_streak",
+        "type_info": "Int4"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int4"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      true,
+      true,
+      true,
+      false,
+      false,
+      true,
+      false,
+      false
+    ]
+  },
+  "hash": "1d9783713a00462f15e0cc174caa41514bf84a129dee523ec37ff18bdb9c06ae"
+}

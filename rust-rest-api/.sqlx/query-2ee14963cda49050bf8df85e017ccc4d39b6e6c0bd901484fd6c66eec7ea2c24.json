@@ -1,0 +1,28 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        SELECT\n            d.day::DATE           AS \"date!: NaiveDate\",\n            COALESCE(rc.count, 0) AS \"count!: i64\"\n        FROM generate_series(\n            (CURRENT_DATE - INTERVAL '34 days')::DATE,\n            CURRENT_DATE,\n            INTERVAL '1 day'\n        ) AS d(day)\n        LEFT JOIN daily_review_counts rc\n            ON rc.review_date = d.day AND rc.user_id = $1\n        ORDER BY d.day ASC\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "date!: NaiveDate",
+        "type_info": "Date"
+      },
+      {
+        "ordinal": 1,
+        "name": "count!: i64",
+        "type_info": "Int4"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int4"
+      ]
+    },
+    "nullable": [
+      null,
+      null
+    ]
+  },
+  "hash": "2ee14963cda49050bf8df85e017ccc4d39b6e6c0bd901484fd6c66eec7ea2c24"
+}

@@ -1,0 +1,88 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        SELECT\n            COUNT(*)                                                              AS total_vocab,\n            COUNT(*) FILTER (WHERE next_review <= NOW())                         AS due_today,\n            COUNT(*) FILTER (WHERE box_number = 1)                              AS box1,\n            COUNT(*) FILTER (WHERE box_number = 2)                              AS box2,\n            COUNT(*) FILTER (WHERE box_number = 3)                              AS box3,\n            COUNT(*) FILTER (WHERE box_number = 4)                              AS box4,\n            COUNT(*) FILTER (WHERE box_number = 5)                              AS box5,\n            COUNT(*) FILTER (WHERE box_number = 1 AND next_review <= NOW())     AS due_box1,\n            COUNT(*) FILTER (WHERE box_number = 2 AND next_review <= NOW())     AS due_box2,\n            COUNT(*) FILTER (WHERE box_number = 3 AND next_review <= NOW())     AS due_box3,\n            COUNT(*) FILTER (WHERE box_number = 4 AND next_review <= NOW())     AS due_box4,\n            COUNT(*) FILTER (WHERE box_number = 5 AND next_review <= NOW())     AS due_box5\n        FROM user_vocab_progress\n        WHERE user_id = $1\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "total_vocab",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 1,
+        "name": "due_today",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 2,
+        "name": "box1",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 3,
+        "name": "box2",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 4,
+        "name": "box3",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 5,
+        "name": "box4",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 6,
+        "name": "box5",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 7,
+        "name": "due_box1",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 8,
+        "name": "due_box2",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 9,
+        "name": "due_box3",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 10,
+        "name": "due_box4",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 11,
+        "name": "due_box5",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int4"
+      ]
+    },
+    "nullable": [
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+    ]
+  },
+  "hash": "674f99b652be15ed1f8d7b38df88667099bbda5a90bd69231d473521f3dc5a30"
+}
