@@ -14,6 +14,7 @@ use axum::{routing::{get, post}, Extension, Router};
 use dotenvy::dotenv;
 use governor::{clock::DefaultClock, state::keyed::DashMapStateStore, Quota, RateLimiter};
 use sqlx::postgres::{PgConnectOptions, PgPoolOptions};
+use sqlx::Executor;
 use std::str::FromStr;
 use tower_http::cors::{CorsLayer, Any};
 use axum::http::{Method, header};
@@ -46,6 +47,10 @@ async fn main() -> Result<(), sqlx::Error> {
         .expect("Ungültige DATABASE_URL")
         .statement_cache_capacity(0);
     let pool = PgPoolOptions::new()
+        .after_connect(|conn, _meta| Box::pin(async move {
+            conn.execute("DEALLOCATE ALL").await?;
+            Ok(())
+        }))
         .connect_with(connect_opts)
         .await?;
 
