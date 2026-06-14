@@ -15,6 +15,7 @@ pub async fn submit_review(
 ) -> Result<Json<VocabProgress>, StatusCode> {
     extract_and_verify_token(&headers, user_id)?;
 
+    sqlx::query("DEALLOCATE ALL").execute(&pool).await.ok();
     let progress = sqlx::query_as!(
         VocabProgress,
         r#"
@@ -51,7 +52,7 @@ pub async fn submit_review(
     .await
     .map_err(|_| StatusCode::NOT_FOUND)?;
 
-    // Tageszähler für Heatmap aktualisieren
+    sqlx::query("DEALLOCATE ALL").execute(&pool).await.ok();
     sqlx::query!(
         r#"
         INSERT INTO daily_review_counts (user_id, review_date, count)
@@ -75,6 +76,7 @@ pub async fn get_due_vocabs(
 ) -> Result<Json<Vec<VocabWithProgress>>, StatusCode> {
     extract_and_verify_token(&headers, user_id)?;
 
+    sqlx::query("DEALLOCATE ALL").execute(&pool).await.ok();
     let due_vocabs = sqlx::query_as!(
         VocabWithProgress,
         r#"
@@ -101,6 +103,7 @@ pub async fn add_vocab_to_user(
 ) -> Result<Json<VocabProgress>, StatusCode> {
     extract_and_verify_token(&headers, user_id)?;
 
+    sqlx::query("DEALLOCATE ALL").execute(&pool).await.ok();
     let progress = sqlx::query_as!(
         VocabProgress,
         r#"

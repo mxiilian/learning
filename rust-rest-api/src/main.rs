@@ -47,9 +47,9 @@ async fn main() -> Result<(), sqlx::Error> {
         .expect("Ungültige DATABASE_URL")
         .statement_cache_capacity(0);
     let pool = PgPoolOptions::new()
-        .before_acquire(|conn, _meta| Box::pin(async move {
+        .after_connect(|conn, _meta| Box::pin(async move {
             conn.execute("DEALLOCATE ALL").await?;
-            Ok(true)
+            Ok(())
         }))
         .connect_with(connect_opts)
         .await?;

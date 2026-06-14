@@ -26,6 +26,7 @@ pub async fn time_travel(
         return Err(StatusCode::FORBIDDEN);
     }
 
+    sqlx::query("DEALLOCATE ALL").execute(&pool).await.ok();
     sqlx::query!(
         r#"
         UPDATE user_vocab_progress

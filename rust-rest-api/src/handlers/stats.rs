@@ -15,6 +15,7 @@ pub async fn get_home_stats(
 ) -> Result<Json<HomeStats>, StatusCode> {
     extract_and_verify_token(&headers, user_id)?;
 
+    sqlx::query("DEALLOCATE ALL").execute(&pool).await.ok();
     let counts = sqlx::query(
         r#"
         SELECT
@@ -39,6 +40,7 @@ pub async fn get_home_stats(
     .await
     .map_err(|e| { error!("get_home_stats counts query failed: {e}"); StatusCode::INTERNAL_SERVER_ERROR })?;
 
+    sqlx::query("DEALLOCATE ALL").execute(&pool).await.ok();
     let review_dates: Vec<NaiveDate> = sqlx::query(
         r#"
         SELECT DISTINCT DATE(last_reviewed) AS review_date
@@ -81,6 +83,7 @@ pub async fn get_vocab_stats(
 ) -> Result<Json<VocabStats>, StatusCode> {
     extract_and_verify_token(&headers, user_id)?;
 
+    sqlx::query("DEALLOCATE ALL").execute(&pool).await.ok();
     let counts = sqlx::query(
         r#"
         SELECT
@@ -110,6 +113,7 @@ pub async fn get_vocab_stats(
         0
     };
 
+    sqlx::query("DEALLOCATE ALL").execute(&pool).await.ok();
     let heatmap_rows = sqlx::query(
         r#"
         SELECT
@@ -160,6 +164,7 @@ pub async fn get_user_vocab_list(
 ) -> Result<Json<Vec<VocabWithProgress>>, StatusCode> {
     extract_and_verify_token(&headers, user_id)?;
 
+    sqlx::query("DEALLOCATE ALL").execute(&pool).await.ok();
     let vocab_list = sqlx::query_as::<_, VocabWithProgress>(
         r#"
         SELECT v.id, v.word, v.definition, v.example_sentence, v.picture_url, v.hint,

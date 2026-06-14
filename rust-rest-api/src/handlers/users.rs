@@ -15,6 +15,7 @@ pub async fn create_user(
     let hashed_password = bcrypt::hash(&new_user.password, 10)
         .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
 
+    sqlx::query("DEALLOCATE ALL").execute(&pool).await.ok();
     let user = sqlx::query_as!(
         UserStruct,
         r#"INSERT INTO user_accounts (username, password_hash)
@@ -34,6 +35,7 @@ pub async fn login_user(
     Extension(pool): Extension<Pool<Postgres>>,
     Json(login_data): Json<LoginUserStruct>,
 ) -> Result<Json<serde_json::Value>, StatusCode> {
+    sqlx::query("DEALLOCATE ALL").execute(&pool).await.ok();
     let user = sqlx::query_as!(
         UserStruct,
         r#"SELECT id, username, password_hash, created_at, is_admin
@@ -96,6 +98,7 @@ pub async fn get_user(
     Extension(pool): Extension<Pool<Postgres>>,
     Path(id): Path<i32>,
 ) -> Result<Json<PublicUserStruct>, StatusCode> {
+    sqlx::query("DEALLOCATE ALL").execute(&pool).await.ok();
     let user = sqlx::query_as!(
         PublicUserStruct,
         r#"SELECT id, username, created_at, is_admin
@@ -113,6 +116,7 @@ pub async fn username_exists(
     Extension(pool): Extension<Pool<Postgres>>,
     Path(username): Path<String>,
 ) -> Result<Json<serde_json::Value>, StatusCode> {
+    sqlx::query("DEALLOCATE ALL").execute(&pool).await.ok();
     let result = sqlx::query!(
         "SELECT id FROM user_accounts WHERE username = $1",
         username

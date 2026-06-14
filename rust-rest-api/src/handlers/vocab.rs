@@ -29,6 +29,7 @@ pub async fn get_vocabs(
 
     let (items, total) = match maybe_user_id {
         Some(user_id) => {
+            sqlx::query("DEALLOCATE ALL").execute(&pool).await.ok();
             let items = sqlx::query_as!(
                 VocabStruct,
                 r#"SELECT id, word, definition, example_sentence, picture_url,
@@ -43,6 +44,7 @@ pub async fn get_vocabs(
             .await
             .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
 
+            sqlx::query("DEALLOCATE ALL").execute(&pool).await.ok();
             let total = sqlx::query_scalar!(
                 "SELECT COUNT(*) FROM vocab WHERE is_public = true OR created_by_user_id = $1",
                 user_id
@@ -55,6 +57,7 @@ pub async fn get_vocabs(
             (items, total)
         }
         None => {
+            sqlx::query("DEALLOCATE ALL").execute(&pool).await.ok();
             let items = sqlx::query_as!(
                 VocabStruct,
                 r#"SELECT id, word, definition, example_sentence, picture_url,
@@ -69,6 +72,7 @@ pub async fn get_vocabs(
             .await
             .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
 
+            sqlx::query("DEALLOCATE ALL").execute(&pool).await.ok();
             let total = sqlx::query_scalar!("SELECT COUNT(*) FROM vocab WHERE is_public = true")
                 .fetch_one(&pool)
                 .await
@@ -86,6 +90,7 @@ pub async fn get_vocab(
     Extension(pool): Extension<Pool<Postgres>>,
     Path(id): Path<i32>,
 ) -> Result<Json<VocabStruct>, StatusCode> {
+    sqlx::query("DEALLOCATE ALL").execute(&pool).await.ok();
     let vocab = sqlx::query_as!(
         VocabStruct,
         r#"SELECT id, word, definition, example_sentence, picture_url,
@@ -125,6 +130,7 @@ pub async fn create_vocab(
 
     let is_public = new_vocab.is_public && claims.is_admin;
 
+    sqlx::query("DEALLOCATE ALL").execute(&pool).await.ok();
     let vocab = sqlx::query_as!(
         VocabStruct,
         r#"INSERT INTO vocab (word, definition, example_sentence, picture_url,
@@ -168,6 +174,7 @@ pub async fn update_vocab(
         return Err(StatusCode::UNPROCESSABLE_ENTITY);
     }
 
+    sqlx::query("DEALLOCATE ALL").execute(&pool).await.ok();
     let existing = sqlx::query!(
         "SELECT created_by_user_id, is_public FROM vocab WHERE id = $1",
         id
@@ -182,6 +189,7 @@ pub async fn update_vocab(
         return Err(StatusCode::FORBIDDEN);
     }
 
+    sqlx::query("DEALLOCATE ALL").execute(&pool).await.ok();
     let vocab = sqlx::query_as!(
         VocabStruct,
         r#"UPDATE vocab
@@ -214,6 +222,7 @@ pub async fn delete_vocab(
 ) -> Result<Json<serde_json::Value>, StatusCode> {
     let claims = extract_claims(&headers)?;
 
+    sqlx::query("DEALLOCATE ALL").execute(&pool).await.ok();
     let existing = sqlx::query!(
         "SELECT created_by_user_id FROM vocab WHERE id = $1",
         id
@@ -228,6 +237,7 @@ pub async fn delete_vocab(
         return Err(StatusCode::FORBIDDEN);
     }
 
+    sqlx::query("DEALLOCATE ALL").execute(&pool).await.ok();
     sqlx::query!("DELETE FROM vocab WHERE id = $1", id)
         .execute(&pool)
         .await
