@@ -11,6 +11,7 @@ import {
     ActivityIndicator,
     Alert,
     Dimensions,
+    Platform,
     Pressable,
     RefreshControl,
     ScrollView,
@@ -92,18 +93,24 @@ export default function Profile() {
         }
     }, [userId, getVocabData]);
 
-    const handleLogout = useCallback(() => {
-        Alert.alert('Abmelden', 'Möchtest du dich wirklich abmelden?', [
-            { text: 'Abbrechen', style: 'cancel' },
-            {
-                text: 'Abmelden',
-                style: 'destructive',
-                onPress: async () => {
-                    await deleteUserSession();
-                    router.replace('/');
+    const handleLogout = useCallback(async () => {
+        if (Platform.OS === 'web') {
+            if (!window.confirm('Möchtest du dich wirklich abmelden?')) return;
+            await deleteUserSession();
+            router.replace('/');
+        } else {
+            Alert.alert('Abmelden', 'Möchtest du dich wirklich abmelden?', [
+                { text: 'Abbrechen', style: 'cancel' },
+                {
+                    text: 'Abmelden',
+                    style: 'destructive',
+                    onPress: async () => {
+                        await deleteUserSession();
+                        router.replace('/');
+                    },
                 },
-            },
-        ]);
+            ]);
+        }
     }, [router]);
 
     if (loading) {
