@@ -41,7 +41,7 @@ pub struct UpdateVocabStruct {
 }
 
 /// Vokabel zusammen mit Lernfortschritt (für Review-Endpunkt)
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, sqlx::FromRow)]
 #[serde(rename_all = "camelCase")]
 pub struct VocabWithProgress {
     // Vocab-Felder
