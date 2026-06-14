@@ -15,7 +15,10 @@ pub async fn get_home_stats(
 ) -> Result<Json<HomeStats>, StatusCode> {
     extract_and_verify_token(&headers, user_id)?;
 
-    sqlx::query("DEALLOCATE ALL").execute(&pool).await.ok();
+    let mut tx = pool.begin().await
+        .map_err(|e| { error!("get_home_stats begin failed: {e}"); StatusCode::INTERNAL_SERVER_ERROR })?;
+
+    sqlx::query("DEALLOCATE ALL").execute(&mut *tx).await.ok();
     let counts = sqlx::query(
         r#"
         SELECT
@@ -36,11 +39,11 @@ pub async fn get_home_stats(
         "#,
     )
     .bind(user_id)
-    .fetch_one(&pool)
+    .fetch_one(&mut *tx)
     .await
     .map_err(|e| { error!("get_home_stats counts query failed: {e}"); StatusCode::INTERNAL_SERVER_ERROR })?;
 
-    sqlx::query("DEALLOCATE ALL").execute(&pool).await.ok();
+    sqlx::query("DEALLOCATE ALL").execute(&mut *tx).await.ok();
     let review_dates: Vec<NaiveDate> = sqlx::query(
         r#"
         SELECT DISTINCT DATE(last_reviewed) AS review_date
@@ -50,12 +53,15 @@ pub async fn get_home_stats(
         "#,
     )
     .bind(user_id)
-    .fetch_all(&pool)
+    .fetch_all(&mut *tx)
     .await
     .map_err(|e| { error!("get_home_stats review_dates query failed: {e}"); StatusCode::INTERNAL_SERVER_ERROR })?
     .into_iter()
     .filter_map(|r| r.try_get::<NaiveDate, _>("review_date").ok())
     .collect();
+
+    tx.commit().await
+        .map_err(|e| { error!("get_home_stats commit failed: {e}"); StatusCode::INTERNAL_SERVER_ERROR })?;
 
     let streak_days = calculate_streak(&review_dates);
 
@@ -83,7 +89,10 @@ pub async fn get_vocab_stats(
 ) -> Result<Json<VocabStats>, StatusCode> {
     extract_and_verify_token(&headers, user_id)?;
 
-    sqlx::query("DEALLOCATE ALL").execute(&pool).await.ok();
+    let mut tx = pool.begin().await
+        .map_err(|e| { error!("get_vocab_stats begin failed: {e}"); StatusCode::INTERNAL_SERVER_ERROR })?;
+
+    sqlx::query("DEALLOCATE ALL").execute(&mut *tx).await.ok();
     let counts = sqlx::query(
         r#"
         SELECT
@@ -101,19 +110,19 @@ pub async fn get_vocab_stats(
         "#,
     )
     .bind(user_id)
-    .fetch_one(&pool)
+    .fetch_one(&mut *tx)
     .await
     .map_err(|e| { error!("get_vocab_stats counts query failed: {e}"); StatusCode::INTERNAL_SERVER_ERROR })?;
 
     let total_reviews: i64   = counts.try_get("total_reviews").unwrap_or(0);
     let correct_reviews: i64 = counts.try_get("correct_reviews").unwrap_or(0);
-    let accuracy_pct    = if total_reviews > 0 {
+    let accuracy_pct = if total_reviews > 0 {
         (correct_reviews * 100) / total_reviews
     } else {
         0
     };
 
-    sqlx::query("DEALLOCATE ALL").execute(&pool).await.ok();
+    sqlx::query("DEALLOCATE ALL").execute(&mut *tx).await.ok();
     let heatmap_rows = sqlx::query(
         r#"
         SELECT
@@ -130,9 +139,12 @@ pub async fn get_vocab_stats(
         "#,
     )
     .bind(user_id)
-    .fetch_all(&pool)
+    .fetch_all(&mut *tx)
     .await
     .map_err(|e| { error!("get_vocab_stats heatmap query failed: {e}"); StatusCode::INTERNAL_SERVER_ERROR })?;
+
+    tx.commit().await
+        .map_err(|e| { error!("get_vocab_stats commit failed: {e}"); StatusCode::INTERNAL_SERVER_ERROR })?;
 
     let heatmap: Vec<DayActivity> = heatmap_rows
         .into_iter()
@@ -164,7 +176,10 @@ pub async fn get_user_vocab_list(
 ) -> Result<Json<Vec<VocabWithProgress>>, StatusCode> {
     extract_and_verify_token(&headers, user_id)?;
 
-    sqlx::query("DEALLOCATE ALL").execute(&pool).await.ok();
+    let mut tx = pool.begin().await
+        .map_err(|e| { error!("get_user_vocab_list begin failed: {e}"); StatusCode::INTERNAL_SERVER_ERROR })?;
+
+    sqlx::query("DEALLOCATE ALL").execute(&mut *tx).await.ok();
     let vocab_list = sqlx::query_as::<_, VocabWithProgress>(
         r#"
         SELECT v.id, v.word, v.definition, v.example_sentence, v.picture_url, v.hint,
@@ -176,9 +191,12 @@ pub async fn get_user_vocab_list(
         "#,
     )
     .bind(user_id)
-    .fetch_all(&pool)
+    .fetch_all(&mut *tx)
     .await
     .map_err(|e| { error!("get_user_vocab_list query failed: {e}"); StatusCode::INTERNAL_SERVER_ERROR })?;
+
+    tx.commit().await
+        .map_err(|e| { error!("get_user_vocab_list commit failed: {e}"); StatusCode::INTERNAL_SERVER_ERROR })?;
 
     Ok(Json(vocab_list))
 }
