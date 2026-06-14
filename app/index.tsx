@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'expo-router';
 import { useRouter } from 'expo-router';
-import { View, Text, TextInput, Pressable, Alert, Keyboard, TouchableWithoutFeedback, Platform } from 'react-native';
+import { View, Text, TextInput, Pressable, Keyboard, TouchableWithoutFeedback, Platform } from 'react-native';
 
 import LoginRoute from '@/components/LoginRoute';
 import { loginUser } from '@/services/userService';
@@ -16,12 +16,14 @@ export default function LoginScreen() {
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
     const [loading, setLoading]   = useState(false);
+    const [error, setError]       = useState<string | null>(null);
 
     async function handleLogin() {
         const u = username.trim();
         const p = password.trim();
+        setError(null);
         if (!u || !p) {
-            Alert.alert('Fehler', 'Benutzername und Passwort sind erforderlich.');
+            setError('Benutzername und Passwort sind erforderlich.');
             return;
         }
 
@@ -31,7 +33,7 @@ export default function LoginScreen() {
         try {
             const response = await loginUser(userData);
             if (response.status !== 'success' || !response.token) {
-                Alert.alert('Fehler', 'Benutzername oder Passwort falsch.');
+                setError('Benutzername oder Passwort falsch.');
                 return;
             }
             await saveUserSession(
@@ -42,7 +44,7 @@ export default function LoginScreen() {
             );
             router.replace('/dashboard');
         } catch {
-            Alert.alert('Fehler', 'Verbindung zum Server fehlgeschlagen.');
+            setError('Verbindung zum Server fehlgeschlagen.');
         } finally {
             setLoading(false);
         }
@@ -70,6 +72,8 @@ export default function LoginScreen() {
                 onChangeText={setPassword}
                 secureTextEntry
             />
+
+            {error && <Text style={s.errorText}>{error}</Text>}
 
             <Pressable
                 style={[s.button, loading && s.buttonDisabled]}

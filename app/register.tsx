@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useRouter } from 'expo-router';
-import { View, Text, TextInput, Pressable, Alert, Keyboard, TouchableWithoutFeedback, Platform } from 'react-native';
+import { View, Text, TextInput, Pressable, Keyboard, TouchableWithoutFeedback, Platform } from 'react-native';
 
 import { createUser } from '@/services/userService';
 import { CreateUser } from '@/services/model/userModel';
@@ -14,15 +14,18 @@ export default function RegisterScreen() {
     const [password, setPassword]               = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
     const [loading, setLoading]                 = useState(false);
+    const [error, setError]                     = useState<string | null>(null);
+    const [success, setSuccess]                 = useState(false);
 
     async function handleRegister() {
         const u = username.trim();
+        setError(null);
         if (!u || !password || !confirmPassword) {
-            Alert.alert('Fehler', 'Alle Felder sind erforderlich.');
+            setError('Alle Felder sind erforderlich.');
             return;
         }
         if (password !== confirmPassword) {
-            Alert.alert('Fehler', 'Passwörter stimmen nicht überein.');
+            setError('Passwörter stimmen nicht überein.');
             return;
         }
 
@@ -31,11 +34,10 @@ export default function RegisterScreen() {
 
         try {
             await createUser(userData);
-            Alert.alert('Erfolg', 'Konto erstellt! Du kannst dich jetzt anmelden.', [
-                { text: 'OK', onPress: () => router.replace('/') },
-            ]);
+            setSuccess(true);
+            setTimeout(() => router.replace('/'), 1500);
         } catch {
-            Alert.alert('Fehler', 'Registrierung fehlgeschlagen. Benutzername vergeben?');
+            setError('Registrierung fehlgeschlagen. Benutzername vergeben?');
         } finally {
             setLoading(false);
         }
@@ -71,6 +73,9 @@ export default function RegisterScreen() {
                 onChangeText={setConfirmPassword}
                 secureTextEntry
             />
+
+            {error && <Text style={s.errorText}>{error}</Text>}
+            {success && <Text style={[s.errorText, { color: '#4ade80' }]}>Konto erstellt! Weiterleitung…</Text>}
 
             <Pressable
                 style={[s.button, loading && s.buttonDisabled]}
