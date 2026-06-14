@@ -1,20 +1,16 @@
 import Constants from 'expo-constants';
 
-/**
- * Im Entwicklungsmodus leitet Expo den Dev-Server auf einer bestimmten IP aus.
- * Wir leiten die API-URL von dieser IP ab, damit das Handy den Server
- * über das lokale Netzwerk erreicht (statt über localhost).
- *
- * In Produktion kann hier eine feste URL gesetzt werden.
- */
 function getBaseUrl(): string {
-    // Expo liefert z.B. "192.168.178.56:8081" — wir tauschen den Port aus
+    // Gesetzt beim Vercel-Build (EXPO_PUBLIC_API_URL env var)
+    if (process.env.EXPO_PUBLIC_API_URL) {
+        return process.env.EXPO_PUBLIC_API_URL;
+    }
+    // Im Expo Dev-Server: IP aus hostUri ableiten
     const hostUri = Constants.expoConfig?.hostUri;
     if (hostUri) {
-        const host = hostUri.split(':')[0]; // nur IP, ohne Port
+        const host = hostUri.split(':')[0];
         return `http://${host}:3000`;
     }
-    // Fallback für Web-Browser auf dem Entwicklungsrechner
     return 'http://localhost:3000';
 }
 

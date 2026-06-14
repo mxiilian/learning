@@ -28,7 +28,11 @@
     },
     "web": {
       "output": "static",
-      "favicon": "./assets/images/favicon.png"
+      "favicon": "./assets/images/favicon.png",
+      "name": "Korean Learning",
+      "shortName": "Korean",
+      "themeColor": "#1a1a2e",
+      "backgroundColor": "#1a1a2e"
     },
     "plugins": [
       "expo-router",
