@@ -44,7 +44,7 @@ app-example
 *.env
 # Rust build artifacts
 rust-rest-api/target/
-rust-rest-api/target/.rustc_info.json
+rust-rest-api/uploads/
 # IDE / Editor
 .vscode/
 .idea/
@@ -65,3 +65,4 @@ Cargo.lock
 
 rust-rest-api/target/.rustc_info.json
 rust-rest-api/target/debug/rust-rest-api.d
+.vercel

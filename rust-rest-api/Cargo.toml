@@ -18,3 +18,4 @@ tower-http = { version = "0.6", features = ["cors", "fs"] }
 uuid = { version = "1", features = ["v4"] }
 jsonwebtoken = "9"
 governor = { version = "0.6", features = ["dashmap"] }
+reqwest = { version = "0.12", features = ["json"] }

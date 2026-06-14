@@ -6,6 +6,7 @@ use serde_json::json;
 use sqlx::{Pool, Postgres};
 use uuid::Uuid;
 
+use crate::config::SupabaseConfig;
 use crate::middleware::auth::{extract_claims, try_extract_user_id};
 use crate::models::vocab::{CreateVocabStruct, PaginatedVocab, UpdateVocabStruct, VocabStruct};
 
@@ -238,17 +239,13 @@ pub async fn delete_vocab(
     })))
 }
 
-/// Nimmt ein multipart/form-data Feld namens "image" entgegen,
-/// speichert es unter uploads/<uuid>.<ext> und gibt die URL zurück.
 pub async fn upload_image(
+    Extension(supabase): Extension<SupabaseConfig>,
+    Extension(http_client): Extension<reqwest::Client>,
     headers: HeaderMap,
     mut multipart: Multipart,
 ) -> Result<Json<serde_json::Value>, StatusCode> {
     extract_claims(&headers)?;
-
-    tokio::fs::create_dir_all("uploads")
-        .await
-        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
 
     while let Some(field) = multipart
         .next_field()
@@ -270,15 +267,32 @@ pub async fn upload_image(
         };
 
         let filename = format!("{}.{}", Uuid::new_v4(), ext);
-        let path     = format!("uploads/{filename}");
-        let url      = format!("/uploads/{filename}");
-
         let bytes = field.bytes().await.map_err(|_| StatusCode::BAD_REQUEST)?;
-        tokio::fs::write(&path, &bytes)
-            .await
-            .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
 
-        return Ok(Json(json!({ "url": url })));
+        let storage_url = format!(
+            "{}/storage/v1/object/vocab-images/{}",
+            supabase.url, filename
+        );
+
+        let resp = http_client
+            .put(&storage_url)
+            .header("Authorization", format!("Bearer {}", supabase.service_key))
+            .header("Content-Type", content_type)
+            .body(bytes)
+            .send()
+            .await
+            .map_err(|_| StatusCode::BAD_GATEWAY)?;
+
+        if !resp.status().is_success() {
+            return Err(StatusCode::BAD_GATEWAY);
+        }
+
+        let public_url = format!(
+            "{}/storage/v1/object/public/vocab-images/{}",
+            supabase.url, filename
+        );
+
+        return Ok(Json(json!({ "url": public_url })));
     }
 
     Err(StatusCode::BAD_REQUEST)

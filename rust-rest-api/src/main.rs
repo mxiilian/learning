@@ -1,3 +1,4 @@
+mod config;
 mod handlers;
 mod middleware;
 mod models;
@@ -14,8 +15,8 @@ use dotenvy::dotenv;
 use governor::{clock::DefaultClock, state::keyed::DashMapStateStore, Quota, RateLimiter};
 use sqlx::postgres::PgPoolOptions;
 use tower_http::cors::{CorsLayer, Any};
-use tower_http::services::ServeDir;
 use axum::http::{Method, header};
+use config::SupabaseConfig;
 use tracing::{info, Level};
 
 use handlers::vocab::{create_vocab, delete_vocab, get_vocab, get_vocabs, update_vocab, upload_image};
@@ -40,11 +41,13 @@ async fn main() -> Result<(), sqlx::Error> {
     dotenv().ok();
     let url = std::env::var("DATABASE_URL").expect("DATABASE_URL must be set");
     let pool = PgPoolOptions::new().connect(&url).await?;
+
+    let supabase_config = SupabaseConfig {
+        url: std::env::var("SUPABASE_URL").expect("SUPABASE_URL must be set"),
+        service_key: std::env::var("SUPABASE_SERVICE_KEY").expect("SUPABASE_SERVICE_KEY must be set"),
+    };
+    let http_client = reqwest::Client::new();
     println!("Connected to the database successfully!");
-    sqlx::migrate!("./migrations")
-        .run(&pool)
-        .await
-        .expect("DB migrations failed");
 
     // JWT-Secret einmalig beim Start einlesen
     let jwt_secret = std::env::var("JWT_SECRET").expect("JWT_SECRET must be set");
@@ -102,11 +105,12 @@ async fn main() -> Result<(), sqlx::Error> {
         .route("/users/{id}/vocab-list", get(get_user_vocab_list))
         // Debug (nur für Entwicklung)
         .route("/debug/users/{id}/time-travel", post(time_travel))
-        // Bild-Upload (erfordert Auth) + statische Auslieferung
+        // Bild-Upload (erfordert Auth)
         .route("/upload/image", post(upload_image))
-        .nest_service("/uploads", ServeDir::new("uploads"))
         .merge(login_router)
         .layer(cors)
+        .layer(Extension(http_client))
+        .layer(Extension(supabase_config))
         .layer(Extension(pool));
 
     let listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await.unwrap();
