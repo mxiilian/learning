@@ -37,6 +37,7 @@ type LoginLimiter = RateLimiter<IpAddr, DashMapStateStore<IpAddr>, DefaultClock>
 async fn main() -> Result<(), sqlx::Error> {
     tracing_subscriber::fmt()
         .with_max_level(Level::INFO)
+        .with_writer(std::io::stdout)
         .init();
 
     dotenv().ok();
