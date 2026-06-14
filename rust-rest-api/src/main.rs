@@ -44,7 +44,10 @@ async fn main() -> Result<(), sqlx::Error> {
     let url = std::env::var("DATABASE_URL").expect("DATABASE_URL must be set");
     let connect_opts = PgConnectOptions::from_str(&url)
         .expect("Ungültige DATABASE_URL");
-    let pool = PgPoolOptions::new().connect_with(connect_opts).await?;
+    let pool = PgPoolOptions::new()
+        .statement_cache_size(0) // Disable prepared statement caching to prevent collisions under concurrent load
+        .connect_with(connect_opts)
+        .await?;
 
     let supabase_config = SupabaseConfig {
         url: std::env::var("SUPABASE_URL").expect("SUPABASE_URL must be set"),
