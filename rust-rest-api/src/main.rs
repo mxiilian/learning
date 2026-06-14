@@ -113,8 +113,9 @@ async fn main() -> Result<(), sqlx::Error> {
         .layer(Extension(supabase_config))
         .layer(Extension(pool));
 
-    let listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await.unwrap();
-    info!("Server is running on http://0.0.0.0:3000");
+    let port = std::env::var("PORT").unwrap_or_else(|_| "3000".to_string());
+    let listener = tokio::net::TcpListener::bind(format!("0.0.0.0:{port}")).await.unwrap();
+    info!("Server is running on http://0.0.0.0:{port}");
     axum::serve(
         listener,
         app.into_make_service_with_connect_info::<SocketAddr>(),
