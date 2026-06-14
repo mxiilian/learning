@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import { Platform } from 'react-native';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
@@ -29,7 +30,7 @@ export default function RootLayout() {
         }
     }, [fontsLoaded, fontError]);
 
-    if (!fontsLoaded && !fontError) return null;
+    if (!fontsLoaded && !fontError && Platform.OS !== 'web') return null;
 
     return (
         <DataProvider>
