@@ -51,7 +51,7 @@ export default function VocabScreen() {
             if (msg.startsWith('UNAUTHORIZED') || msg === 'Nicht eingeloggt') {
                 router.replace('/');
             } else {
-                setError('Server nicht erreichbar. Bist du im gleichen WLAN wie der Mac?');
+                setError('Server nicht erreichbar. Bitte später erneut versuchen.');
             }
         } finally {
             setLoading(false);

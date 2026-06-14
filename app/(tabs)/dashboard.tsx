@@ -62,7 +62,7 @@ export default function Dashboard() {
                         await deleteUserSession();
                         router.replace('/');
                     } else {
-                        setError('Server nicht erreichbar. Bist du im gleichen WLAN wie der Mac?');
+                        setError('Server nicht erreichbar. Bitte später erneut versuchen.');
                     }
                 } finally {
                     if (!cancelled) setLoading(false);
@@ -85,7 +85,7 @@ export default function Dashboard() {
                 await deleteUserSession();
                 router.replace('/');
             } else {
-                setError('Server nicht erreichbar. Bist du im gleichen WLAN wie der Mac?');
+                setError('Server nicht erreichbar. Bitte später erneut versuchen.');
             }
         } finally {
             setLoading(false);

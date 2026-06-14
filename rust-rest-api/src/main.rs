@@ -42,6 +42,9 @@ async fn main() -> Result<(), sqlx::Error> {
     let url = std::env::var("DATABASE_URL").expect("DATABASE_URL must be set");
     let pool = PgPoolOptions::new().connect(&url).await?;
 
+    sqlx::migrate!("./migrations").run(&pool).await
+        .expect("Migration fehlgeschlagen");
+
     let supabase_config = SupabaseConfig {
         url: std::env::var("SUPABASE_URL").expect("SUPABASE_URL must be set"),
         service_key: std::env::var("SUPABASE_SERVICE_KEY").expect("SUPABASE_SERVICE_KEY must be set"),
