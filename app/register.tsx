@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useRouter } from 'expo-router';
-import { View, Text, TextInput, Pressable, Alert, Keyboard, TouchableWithoutFeedback } from 'react-native';
+import { View, Text, TextInput, Pressable, Alert, Keyboard, TouchableWithoutFeedback, Platform } from 'react-native';
 
 import { createUser } from '@/services/userService';
 import { CreateUser } from '@/services/model/userModel';
@@ -41,8 +41,7 @@ export default function RegisterScreen() {
         }
     }
 
-    return (
-        <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+    const content = (
         <View style={s.container}>
             <Text style={s.brand}>안녕 한국</Text>
             <Text style={s.title}>Registrieren</Text>
@@ -85,6 +84,11 @@ export default function RegisterScreen() {
                 <Text style={s.link}>Zurück zum Login</Text>
             </Pressable>
         </View>
+    );
+
+    return Platform.OS === 'web' ? content : (
+        <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+            {content}
         </TouchableWithoutFeedback>
     );
 }

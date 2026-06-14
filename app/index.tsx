@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'expo-router';
 import { useRouter } from 'expo-router';
-import { View, Text, TextInput, Pressable, Alert, Keyboard, TouchableWithoutFeedback } from 'react-native';
+import { View, Text, TextInput, Pressable, Alert, Keyboard, TouchableWithoutFeedback, Platform } from 'react-native';
 
 import LoginRoute from '@/components/LoginRoute';
 import { loginUser } from '@/services/userService';
@@ -48,44 +48,50 @@ export default function LoginScreen() {
         }
     }
 
+    const content = (
+        <View style={s.container}>
+            <Text style={s.brand}>안녕 한국</Text>
+            <Text style={s.title}>Anmelden</Text>
+
+            <TextInput
+                style={s.input}
+                placeholder="Benutzername"
+                placeholderTextColor={Colors.muted}
+                value={username}
+                onChangeText={setUsername}
+                autoCapitalize="none"
+                autoCorrect={false}
+            />
+            <TextInput
+                style={s.input}
+                placeholder="Passwort"
+                placeholderTextColor={Colors.muted}
+                value={password}
+                onChangeText={setPassword}
+                secureTextEntry
+            />
+
+            <Pressable
+                style={[s.button, loading && s.buttonDisabled]}
+                onPress={handleLogin}
+                disabled={loading}
+            >
+                <Text style={s.buttonText}>{loading ? 'Lade…' : 'Anmelden'}</Text>
+            </Pressable>
+
+            <Link href="/register" style={s.link}>
+                Noch kein Konto? Registrieren
+            </Link>
+        </View>
+    );
+
     return (
         <LoginRoute>
-            <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-            <View style={s.container}>
-                <Text style={s.brand}>안녕 한국</Text>
-                <Text style={s.title}>Anmelden</Text>
-
-                <TextInput
-                    style={s.input}
-                    placeholder="Benutzername"
-                    placeholderTextColor={Colors.muted}
-                    value={username}
-                    onChangeText={setUsername}
-                    autoCapitalize="none"
-                    autoCorrect={false}
-                />
-                <TextInput
-                    style={s.input}
-                    placeholder="Passwort"
-                    placeholderTextColor={Colors.muted}
-                    value={password}
-                    onChangeText={setPassword}
-                    secureTextEntry
-                />
-
-                <Pressable
-                    style={[s.button, loading && s.buttonDisabled]}
-                    onPress={handleLogin}
-                    disabled={loading}
-                >
-                    <Text style={s.buttonText}>{loading ? 'Lade…' : 'Anmelden'}</Text>
-                </Pressable>
-
-                <Link href="/register" style={s.link}>
-                    Noch kein Konto? Registrieren
-                </Link>
-            </View>
-            </TouchableWithoutFeedback>
+            {Platform.OS === 'web' ? content : (
+                <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+                    {content}
+                </TouchableWithoutFeedback>
+            )}
         </LoginRoute>
     );
 }
