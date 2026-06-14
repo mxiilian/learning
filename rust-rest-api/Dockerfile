@@ -30,5 +30,5 @@ WORKDIR /app
 COPY --from=builder /app/target/release/rust-rest-api .
 COPY --from=builder /app/migrations ./migrations
 
-EXPOSE 3000
+EXPOSE 8080
 CMD ["./rust-rest-api"]
