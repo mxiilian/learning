@@ -13,7 +13,8 @@ use axum::response::IntoResponse;
 use axum::{routing::{get, post}, Extension, Router};
 use dotenvy::dotenv;
 use governor::{clock::DefaultClock, state::keyed::DashMapStateStore, Quota, RateLimiter};
-use sqlx::postgres::PgPoolOptions;
+use sqlx::postgres::{PgConnectOptions, PgPoolOptions};
+use std::str::FromStr;
 use tower_http::cors::{CorsLayer, Any};
 use axum::http::{Method, header};
 use config::SupabaseConfig;
@@ -40,7 +41,10 @@ async fn main() -> Result<(), sqlx::Error> {
 
     dotenv().ok();
     let url = std::env::var("DATABASE_URL").expect("DATABASE_URL must be set");
-    let pool = PgPoolOptions::new().connect(&url).await?;
+    let connect_opts = PgConnectOptions::from_str(&url)
+        .expect("Ungültige DATABASE_URL")
+        .statement_cache_capacity(0);
+    let pool = PgPoolOptions::new().connect_with(connect_opts).await?;
 
     let supabase_config = SupabaseConfig {
         url: std::env::var("SUPABASE_URL").expect("SUPABASE_URL must be set"),

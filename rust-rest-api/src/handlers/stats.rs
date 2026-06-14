@@ -3,6 +3,7 @@ use axum::http::{HeaderMap, StatusCode};
 use axum::Json;
 use chrono::{Duration, Local, NaiveDate};
 use sqlx::{Pool, Postgres};
+use tracing::error;
 
 use crate::middleware::auth::extract_and_verify_token;
 use crate::models::vocab::{DayActivity, HomeStats, VocabStats, VocabWithProgress};
@@ -36,7 +37,7 @@ pub async fn get_home_stats(
     )
     .fetch_one(&pool)
     .await
-    .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+    .map_err(|e| { error!("get_home_stats counts query failed: {e}"); StatusCode::INTERNAL_SERVER_ERROR })?;
 
     let review_dates: Vec<NaiveDate> = sqlx::query_scalar!(
         r#"
@@ -49,7 +50,7 @@ pub async fn get_home_stats(
     )
     .fetch_all(&pool)
     .await
-    .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?
+    .map_err(|e| { error!("get_home_stats review_dates query failed: {e}"); StatusCode::INTERNAL_SERVER_ERROR })?
     .into_iter()
     .flatten()
     .collect();
@@ -99,7 +100,7 @@ pub async fn get_vocab_stats(
     )
     .fetch_one(&pool)
     .await
-    .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+    .map_err(|e| { error!("get_vocab_stats counts query failed: {e}"); StatusCode::INTERNAL_SERVER_ERROR })?;
 
     let total_reviews   = counts.total_reviews.unwrap_or(0);
     let correct_reviews = counts.correct_reviews.unwrap_or(0);
@@ -127,7 +128,7 @@ pub async fn get_vocab_stats(
     )
     .fetch_all(&pool)
     .await
-    .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+    .map_err(|e| { error!("get_vocab_stats heatmap query failed: {e}"); StatusCode::INTERNAL_SERVER_ERROR })?;
 
     let heatmap: Vec<DayActivity> = heatmap_rows
         .into_iter()
@@ -170,7 +171,7 @@ pub async fn get_user_vocab_list(
     )
     .fetch_all(&pool)
     .await
-    .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+    .map_err(|e| { error!("get_user_vocab_list query failed: {e}"); StatusCode::INTERNAL_SERVER_ERROR })?;
 
     Ok(Json(vocab_list))
 }
