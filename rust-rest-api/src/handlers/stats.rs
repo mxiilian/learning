@@ -2,7 +2,7 @@ use axum::extract::{Extension, Path};
 use axum::http::{HeaderMap, StatusCode};
 use axum::Json;
 use chrono::{Duration, Local, NaiveDate};
-use sqlx::{Pool, Postgres};
+use sqlx::{Pool, Postgres, Row};
 use tracing::error;
 
 use crate::middleware::auth::extract_and_verify_token;
@@ -15,7 +15,7 @@ pub async fn get_home_stats(
 ) -> Result<Json<HomeStats>, StatusCode> {
     extract_and_verify_token(&headers, user_id)?;
 
-    let counts = sqlx::query!(
+    let counts = sqlx::query(
         r#"
         SELECT
             COUNT(*)                                                              AS total_vocab,
@@ -33,43 +33,43 @@ pub async fn get_home_stats(
         FROM user_vocab_progress
         WHERE user_id = $1
         "#,
-        user_id
     )
+    .bind(user_id)
     .fetch_one(&pool)
     .await
     .map_err(|e| { error!("get_home_stats counts query failed: {e}"); StatusCode::INTERNAL_SERVER_ERROR })?;
 
-    let review_dates: Vec<NaiveDate> = sqlx::query_scalar!(
+    let review_dates: Vec<NaiveDate> = sqlx::query(
         r#"
-        SELECT DISTINCT DATE(last_reviewed)
+        SELECT DISTINCT DATE(last_reviewed) AS review_date
         FROM user_vocab_progress
         WHERE user_id = $1 AND last_reviewed IS NOT NULL
         ORDER BY 1 DESC
         "#,
-        user_id
     )
+    .bind(user_id)
     .fetch_all(&pool)
     .await
     .map_err(|e| { error!("get_home_stats review_dates query failed: {e}"); StatusCode::INTERNAL_SERVER_ERROR })?
     .into_iter()
-    .flatten()
+    .filter_map(|r| r.try_get::<NaiveDate, _>("review_date").ok())
     .collect();
 
     let streak_days = calculate_streak(&review_dates);
 
     Ok(Json(HomeStats {
-        total_vocab: counts.total_vocab.unwrap_or(0),
-        due_today:   counts.due_today.unwrap_or(0),
-        box1:        counts.box1.unwrap_or(0),
-        box2:        counts.box2.unwrap_or(0),
-        box3:        counts.box3.unwrap_or(0),
-        box4:        counts.box4.unwrap_or(0),
-        box5:        counts.box5.unwrap_or(0),
-        due_box1:    counts.due_box1.unwrap_or(0),
-        due_box2:    counts.due_box2.unwrap_or(0),
-        due_box3:    counts.due_box3.unwrap_or(0),
-        due_box4:    counts.due_box4.unwrap_or(0),
-        due_box5:    counts.due_box5.unwrap_or(0),
+        total_vocab: counts.try_get("total_vocab").unwrap_or(0),
+        due_today:   counts.try_get("due_today").unwrap_or(0),
+        box1:        counts.try_get("box1").unwrap_or(0),
+        box2:        counts.try_get("box2").unwrap_or(0),
+        box3:        counts.try_get("box3").unwrap_or(0),
+        box4:        counts.try_get("box4").unwrap_or(0),
+        box5:        counts.try_get("box5").unwrap_or(0),
+        due_box1:    counts.try_get("due_box1").unwrap_or(0),
+        due_box2:    counts.try_get("due_box2").unwrap_or(0),
+        due_box3:    counts.try_get("due_box3").unwrap_or(0),
+        due_box4:    counts.try_get("due_box4").unwrap_or(0),
+        due_box5:    counts.try_get("due_box5").unwrap_or(0),
         streak_days,
     }))
 }
@@ -81,7 +81,7 @@ pub async fn get_vocab_stats(
 ) -> Result<Json<VocabStats>, StatusCode> {
     extract_and_verify_token(&headers, user_id)?;
 
-    let counts = sqlx::query!(
+    let counts = sqlx::query(
         r#"
         SELECT
             COUNT(*)                                          AS total_vocab,
@@ -96,25 +96,25 @@ pub async fn get_vocab_stats(
         FROM user_vocab_progress
         WHERE user_id = $1
         "#,
-        user_id
     )
+    .bind(user_id)
     .fetch_one(&pool)
     .await
     .map_err(|e| { error!("get_vocab_stats counts query failed: {e}"); StatusCode::INTERNAL_SERVER_ERROR })?;
 
-    let total_reviews   = counts.total_reviews.unwrap_or(0);
-    let correct_reviews = counts.correct_reviews.unwrap_or(0);
+    let total_reviews: i64   = counts.try_get("total_reviews").unwrap_or(0);
+    let correct_reviews: i64 = counts.try_get("correct_reviews").unwrap_or(0);
     let accuracy_pct    = if total_reviews > 0 {
         (correct_reviews * 100) / total_reviews
     } else {
         0
     };
 
-    let heatmap_rows = sqlx::query!(
+    let heatmap_rows = sqlx::query(
         r#"
         SELECT
-            d.day::DATE           AS "date!: NaiveDate",
-            COALESCE(rc.count, 0) AS "count!: i64"
+            d.day::DATE           AS date,
+            COALESCE(rc.count, 0) AS count
         FROM generate_series(
             (CURRENT_DATE - INTERVAL '34 days')::DATE,
             CURRENT_DATE,
@@ -124,25 +124,28 @@ pub async fn get_vocab_stats(
             ON rc.review_date = d.day AND rc.user_id = $1
         ORDER BY d.day ASC
         "#,
-        user_id
     )
+    .bind(user_id)
     .fetch_all(&pool)
     .await
     .map_err(|e| { error!("get_vocab_stats heatmap query failed: {e}"); StatusCode::INTERNAL_SERVER_ERROR })?;
 
     let heatmap: Vec<DayActivity> = heatmap_rows
         .into_iter()
-        .map(|r| DayActivity { date: r.date, count: r.count })
+        .map(|r| DayActivity {
+            date:  r.try_get("date").unwrap_or_default(),
+            count: r.try_get("count").unwrap_or(0),
+        })
         .collect();
 
     Ok(Json(VocabStats {
-        total_vocab:    counts.total_vocab.unwrap_or(0),
-        due_today:      counts.due_today.unwrap_or(0),
-        box1:           counts.box1.unwrap_or(0),
-        box2:           counts.box2.unwrap_or(0),
-        box3:           counts.box3.unwrap_or(0),
-        box4:           counts.box4.unwrap_or(0),
-        box5:           counts.box5.unwrap_or(0),
+        total_vocab:    counts.try_get("total_vocab").unwrap_or(0),
+        due_today:      counts.try_get("due_today").unwrap_or(0),
+        box1:           counts.try_get("box1").unwrap_or(0),
+        box2:           counts.try_get("box2").unwrap_or(0),
+        box3:           counts.try_get("box3").unwrap_or(0),
+        box4:           counts.try_get("box4").unwrap_or(0),
+        box5:           counts.try_get("box5").unwrap_or(0),
         total_reviews,
         correct_reviews,
         accuracy_pct,
@@ -157,8 +160,7 @@ pub async fn get_user_vocab_list(
 ) -> Result<Json<Vec<VocabWithProgress>>, StatusCode> {
     extract_and_verify_token(&headers, user_id)?;
 
-    let vocab_list = sqlx::query_as!(
-        VocabWithProgress,
+    let vocab_list = sqlx::query_as::<_, VocabWithProgress>(
         r#"
         SELECT v.id, v.word, v.definition, v.example_sentence, v.picture_url, v.hint,
                p.id AS progress_id, p.box_number, p.last_reviewed, p.next_review, p.correct_streak
@@ -167,8 +169,8 @@ pub async fn get_user_vocab_list(
         WHERE p.user_id = $1
         ORDER BY v.word ASC
         "#,
-        user_id
     )
+    .bind(user_id)
     .fetch_all(&pool)
     .await
     .map_err(|e| { error!("get_user_vocab_list query failed: {e}"); StatusCode::INTERNAL_SERVER_ERROR })?;
