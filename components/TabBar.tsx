@@ -1,8 +1,7 @@
-import React from 'react';
-import { Pressable, Text, View, StyleSheet } from 'react-native';
-import { useRouter, usePathname } from 'expo-router';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Colors, Fonts } from '@/styles/theme';
+import { usePathname, useRouter } from 'expo-router';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const TAB_ITEMS = [
     { id: 'home',      label: 'Home',     icon: '◉', route: '/dashboard' },
@@ -25,10 +24,12 @@ export default function TabBar() {
     const pathname = usePathname();
     const insets   = useSafeAreaInsets();
 
-    const active = ROUTE_TO_TAB[pathname] ?? 'home';
+    const active      = ROUTE_TO_TAB[pathname] ?? 'home';
+    const isElectron  = typeof window !== 'undefined' && !!(window as any).electronAPI;
+    const bottomValue = Math.max(insets.bottom + 10, 18) - (isElectron ? -28 : 0);
 
     return (
-        <View style={[styles.tabbar, { bottom: Math.max(insets.bottom + 10, 18) }]}>
+        <View style={[styles.tabbar, { bottom: bottomValue }]}>
             {TAB_ITEMS.map(item => {
                 const isActive = item.id === active;
                 return (

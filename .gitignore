@@ -7,6 +7,9 @@ node_modules/
 .expo/
 dist/
 web-build/
+
+# Electron build output
+dist-electron/
 expo-env.d.ts
 
 # Native

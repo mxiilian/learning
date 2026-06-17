@@ -1,6 +1,10 @@
 import Constants from 'expo-constants';
 
 function getBaseUrl(): string {
+    // Electron: URL kommt zur Laufzeit vom Main-Prozess via contextBridge
+    if (typeof window !== 'undefined' && (window as any).electronAPI?.apiUrl) {
+        return (window as any).electronAPI.apiUrl;
+    }
     // Gesetzt beim Vercel-Build (EXPO_PUBLIC_API_URL env var)
     if (process.env.EXPO_PUBLIC_API_URL) {
         return process.env.EXPO_PUBLIC_API_URL;

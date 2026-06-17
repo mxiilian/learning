@@ -10,7 +10,6 @@ import { useCallback, useState } from 'react';
 import {
     ActivityIndicator,
     Alert,
-    Dimensions,
     Platform,
     Pressable,
     RefreshControl,
@@ -19,15 +18,11 @@ import {
     View,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useTabBarPadding } from '@/hooks/useTabBarPadding';
 
 // ─── Heatmap-Konstanten ───────────────────────────────────────────
-const SCREEN_WIDTH  = Dimensions.get('window').width;
-const HEATMAP_H_PAD = 18 * 2 + 18 * 2;
-const HEATMAP_GAP   = 3;
-const HEATMAP_COLS  = 7;
-const CELL_SIZE     = Math.floor(
-    (SCREEN_WIDTH - HEATMAP_H_PAD - (HEATMAP_COLS - 1) * HEATMAP_GAP) / HEATMAP_COLS
-);
+const HEATMAP_GAP  = 3;
+const HEATMAP_COLS = 7;
 
 function countToLevel(count: number): 0 | 1 | 2 | 3 {
     if (count === 0) return 0;
@@ -46,7 +41,8 @@ const HEATMAP_COLORS: Record<0 | 1 | 2 | 3, string> = {
 // ─── Haupt-Screen ─────────────────────────────────────────────────
 export default function Profile() {
     const router  = useRouter();
-    const insets  = useSafeAreaInsets();
+    const insets        = useSafeAreaInsets();
+    const tabBarPadding = useTabBarPadding();
     const { getVocabData } = useData();
 
     const [username,   setUsername]   = useState<string>('');
@@ -54,6 +50,7 @@ export default function Profile() {
     const [heatmap,    setHeatmap]    = useState<DayActivity[]>([]);
     const [loading,    setLoading]    = useState(true);
     const [refreshing, setRefreshing] = useState(false);
+    const [cellSize,   setCellSize]   = useState(36);
 
     useFocusEffect(
         useCallback(() => {
@@ -130,7 +127,7 @@ export default function Profile() {
                     style={s.scroll}
                     contentContainerStyle={[
                         s.scrollContent,
-                        { paddingTop: insets.top + 12, paddingBottom: 90 + insets.bottom },
+                        { paddingTop: insets.top + 12, paddingBottom: tabBarPadding },
                     ]}
                     showsVerticalScrollIndicator={false}
                     refreshControl={
@@ -156,7 +153,15 @@ export default function Profile() {
                     </View>
 
                     {/* Aktivitätsübersicht */}
-                    <View style={s.heatmapCard}>
+                    <View
+                        style={s.heatmapCard}
+                        onLayout={({ nativeEvent: { layout } }) => {
+                            const inner = layout.width - 16 * 2;
+                            setCellSize(Math.floor(
+                                (inner - (HEATMAP_COLS - 1) * HEATMAP_GAP) / HEATMAP_COLS
+                            ));
+                        }}
+                    >
                         <View style={s.heatmapHeader}>
                             <Text style={s.cardTitle}>Aktivität</Text>
                             <Text style={s.subText}>5 Wochen</Text>
@@ -172,8 +177,8 @@ export default function Profile() {
                                             <View
                                                 key={col}
                                                 style={{
-                                                    width:           CELL_SIZE,
-                                                    height:          CELL_SIZE,
+                                                    width:           cellSize,
+                                                    height:          cellSize,
                                                     borderRadius:    3,
                                                     borderWidth:     1,
                                                     borderColor:     Colors.muted,

@@ -1,6 +1,7 @@
 import ProtectedRoute from '@/components/ProtectedRoute';
 import TabBar from '@/components/TabBar';
 import { useData } from '@/context/DataContext';
+import { useTabBarPadding } from '@/hooks/useTabBarPadding';
 import { getUserId } from '@/services/authService';
 import { VocabWithProgress } from '@/services/model/VocabModels';
 import { VocabStats } from '@/services/model/vocabStatsModel';
@@ -29,8 +30,9 @@ const BOX_INTERVALS  = ['täglich', 'alle 2 T.', 'alle 4 T.', 'wöchentl.', 'mon
 
 // ─── Haupt-Screen ─────────────────────────────────────────────────
 export default function VocabScreen() {
-    const router   = useRouter();
-    const insets   = useSafeAreaInsets();
+    const router        = useRouter();
+    const insets        = useSafeAreaInsets();
+    const tabBarPadding = useTabBarPadding();
     const { getVocabData, invalidate } = useData();
 
     const [userId, setUserId]         = useState<number | null>(null);
@@ -123,7 +125,7 @@ export default function VocabScreen() {
                     style={s.scroll}
                     contentContainerStyle={[
                         s.scrollContent,
-                        { paddingTop: insets.top + 12, paddingBottom: 90 + insets.bottom },
+                        { paddingTop: insets.top + 12, paddingBottom: tabBarPadding + 8 },
                     ]}
                     showsVerticalScrollIndicator={false}
                     refreshControl={

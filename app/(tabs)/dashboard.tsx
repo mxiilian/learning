@@ -16,14 +16,16 @@ import {
     View,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useTabBarPadding } from '@/hooks/useTabBarPadding';
 
 // ─── Konstanten ───────────────────────────────────────────────────
 const BOX_INTERVALS = ['täglich', 'alle 3 Tage', 'wöchentlich', 'alle 2 Wochen', 'monatlich'];
 
 // ─── Haupt-Screen ─────────────────────────────────────────────────
 export default function Dashboard() {
-    const router = useRouter();
-    const insets = useSafeAreaInsets();
+    const router         = useRouter();
+    const insets         = useSafeAreaInsets();
+    const tabBarPadding  = useTabBarPadding();
     const { getHomeStats, invalidate } = useData();
 
     const [username, setUsername]     = useState<string>('');
@@ -140,7 +142,7 @@ export default function Dashboard() {
                     style={s.scroll}
                     contentContainerStyle={[
                         s.scrollContent,
-                        { paddingTop: insets.top + 12, paddingBottom: 90 + insets.bottom },
+                        { paddingTop: insets.top + 12, paddingBottom: tabBarPadding },
                     ]}
                     showsVerticalScrollIndicator={false}
                     refreshControl={
